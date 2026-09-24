@@ -43,10 +43,12 @@ O banco tem dois schemas:
 - **`staging`:** a planilha "suja" importada como texto, sem restrições. É o ponto de partida da análise de conferência.
 - **`core`:** os dados limpos, com a integridade garantida pelo próprio banco.
 
+> Implementado nas migrações `0001` a `0004`. As decisões e seus motivos estão em [DECISOES.md](DECISOES.md); os pontos em que a implementação diferiu do planejamento inicial estão marcados abaixo.
+
 ```mermaid
 erDiagram
-    CATEGORIA ||--o{ CATEGORIA : "pai"
-    CATEGORIA ||--o{ MATERIAL_TIPO : classifica
+    CATEGORIA ||--o{ SUBCATEGORIA : agrupa
+    SUBCATEGORIA ||--o{ MATERIAL_TIPO : classifica
     MATERIAL_TIPO ||--o{ UNIDADE_PATRIMONIAL : "SERIAL"
     MATERIAL_TIPO ||--o| SALDO_CONSUMO : "CONSUMO"
     LOCAL_ARMAZENAGEM ||--o{ UNIDADE_PATRIMONIAL : guarda
@@ -64,17 +66,17 @@ erDiagram
 
 | Tabela | Campos principais | Regras no banco |
 |---|---|---|
-| `categoria` | nome, `categoria_pai_id` | Auto-referência para subcategoria; `UNIQUE (nome, pai)` |
-| `material_tipo` | código (fictício), nome, descrição, categoria, unidade de medida, `controle` (`SERIAL`/`CONSUMO`), prazo padrão de devolução, custo unitário (fictício), ativo | `UNIQUE (codigo)`; `UNIQUE (id, controle)` para as FKs compostas |
-| `setor`, `local_armazenagem` | nome | `UNIQUE (nome)`; locais genéricos |
-| `pessoa` | nome e matrícula fictícios, setor, ativo | `UNIQUE (matricula)`; quem recebe material não precisa ter login |
-| `usuario` | pessoa, login, hash da senha, perfil | Perfil restrito a valores válidos; `UNIQUE (pessoa_id)` |
+| `categoria`, `subcategoria` | nome (subcategoria aponta para a categoria) | Duas tabelas (mudou: planejado como autorreferência); nome único sem diferenciar maiúsculas |
+| `material_tipo` | código (fictício), nome, descrição, subcategoria, unidade de medida, `controle` (`SERIAL`/`CONSUMO`), prazo padrão de devolução **em horas**, custo unitário (fictício), ativo | `UNIQUE (codigo)`; `UNIQUE (id, controle)` para as FKs compostas; prazo só para serial; serial medido em `UN` |
+| `setor`, `local_armazenagem` | sigla/nome | Nome único; locais genéricos |
+| `pessoa` | nome e matrícula fictícios, setor, `data_entrada`, `data_saida` | `UNIQUE (matricula)`; quem recebe material não precisa ter login; `data_saida` = transferência (mudou: planejado como "ativo") |
+| `usuario` | pessoa, login, perfil, ativo | Perfil restrito a 4 valores; `UNIQUE (pessoa_id)`; hash de senha entra na fase da aplicação |
 | `unidade_patrimonial` | BMP, número de série, tipo, local, status, detentor atual | Ver abaixo |
 | `saldo_consumo` | tipo, quantidade, mínimo, máximo | `CHECK (quantidade >= 0)`; `CHECK (maximo >= minimo)` |
 | `movimentacao` | ver seção 4.2 | Somente inserção |
 
 **`unidade_patrimonial`:**
-- O BMP é único por unidade. Pode faltar apenas em material recém-adquirido: `CHECK (bmp IS NOT NULL OR status = 'AGUARDANDO_TOMBAMENTO')`.
+- O BMP é único por unidade. Falta se, e somente se, o material recém-adquirido aguarda tombamento: `CHECK ((bmp IS NULL) = (status = 'AGUARDANDO_TOMBAMENTO'))`.
 - Índice único parcial em `(material_tipo_id, numero_serie)` quando o número de série existe.
 - `CHECK`: status `CAUTELADA` se e somente se há detentor.
 - Status: `DISPONIVEL`, `CAUTELADA`, `EM_MANUTENCAO`, `NAO_LOCALIZADA`, `BAIXA_PENDENTE`, `BAIXADA`, `AGUARDANDO_TOMBAMENTO`.
@@ -83,9 +85,10 @@ erDiagram
 
 ### 4.2 `movimentacao` (o histórico)
 
-- Campos: `ocorrida_em` (`TIMESTAMPTZ`), tipo (`ENTRADA`, `RETIRADA`, `DEVOLUCAO`, `AJUSTE`, `BAIXA`, `CONFERENCIA`), tipo de material, unidade (só patrimonial), quantidade, saldo antes e depois (só consumo), pessoa que recebe ou devolve, usuário que executou, finalidade, documento de referência, estado na devolução, prazo de devolução, observação, origem e `estorno_de_id`.
-- `CHECK` de forma: ou é patrimonial (unidade preenchida e quantidade = 1), ou é consumo (sem unidade, com saldo antes e depois coerentes com a quantidade).
-- **Nada é editado ou apagado.** Um erro é corrigido com uma movimentação de estorno que aponta para a original. Uma trigger bloqueia `UPDATE` e `DELETE`, e o usuário da aplicação não tem essas permissões.
+- Campos: `ocorrida_em` e `lancada_em` (`TIMESTAMPTZ`), tipo (`ENTRADA`, `RETIRADA`, `DEVOLUCAO`, `MUDANCA_STATUS`, `AJUSTE`, `ESTORNO`), tipo de material, unidade e status anterior/novo (só patrimonial), variação assinada e saldo antes/depois (só consumo), pessoa que recebe ou devolve, usuário que executou, setor de destino, finalidade, documento de referência, estado na devolução, prazo de devolução, observação e `estorno_de_id`. (Mudou: baixa e conferência viraram `MUDANCA_STATUS`.)
+- `CHECK` de forma: ou é patrimonial (unidade e status novo preenchidos, sem saldo), ou é consumo (sem unidade, com `saldo_depois = saldo_antes + variacao`).
+- **Nada é editado ou apagado.** Um erro é corrigido com uma movimentação de estorno que aponta para a original. Triggers bloqueiam `UPDATE`, `DELETE` e `TRUNCATE`; na fase da aplicação, o usuário da API também não terá essas permissões.
+- **Toda movimentação passa por uma função do banco** (`core.registrar_*`, `core.alterar_status_unidade`, `core.estornar_movimentacao`), que confere o perfil, trava a linha, valida a regra e grava tudo numa transação. (Mudou: a regra no banco não estava no planejamento; ver D1.)
 - A cautela não tem tabela própria: o par retirada/devolução é reconstruído com window functions (`LAG`/`LEAD`), de onde saem o tempo de posse e os atrasos.
 - O estado atual (status e detentor da unidade, saldo de consumo) é atualizado **na mesma transação** que grava a movimentação, com a linha bloqueada (`SELECT ... FOR UPDATE`). Um teste garante que o estado atual é igual ao que o histórico reconstrói.
 
@@ -111,7 +114,7 @@ Auditoria de edição de cadastro (JSONB antes/depois por trigger), sessões e p
 
 ## 5. Padrões do gerador de dados
 
-Regras gerais: semente fixa, data-âncora (`--ate 2026-09-30`, período de 12 meses), todos os parâmetros em um único arquivo de configuração, e cada padrão com um teste que confirma que ele aparece nos dados gerados. Todo padrão tem ruído.
+Regras gerais: semente fixa, data-âncora (`--ate 2026-08-31`, período de 12 meses; mudou de 30/09 porque o banco recusa movimentações no futuro), todos os parâmetros em um único arquivo de configuração, e cada padrão com um teste que confirma que ele aparece nos dados gerados. Todo padrão tem ruído.
 
 ### Cautela e atrasos
 
@@ -120,7 +123,7 @@ Regras gerais: semente fixa, data-âncora (`--ate 2026-09-30`, período de 12 me
 | P1 | Rádios saem no início do turno e voltam no fim; ~90% no mesmo dia, ~5% no dia seguinte. |
 | P2 | Perfis de pessoas: ~28 pontuais, ~8 ocasionais (~15% das cautelas em atraso) e 4 reincidentes (~40% em atraso). |
 | P3 | Um setor concentra os atrasos de ferramentas elétricas (prazo padrão de 7 dias). |
-| P4 | Três unidades ficam mais de 60 dias com pessoas que mudaram de setor e terminam como `NAO_LOCALIZADA`. |
+| P4 | Três unidades ficam cauteladas com pessoas que depois são transferidas da unidade; mais de 60 dias depois, a conferência as marca como `NAO_LOCALIZADA`. |
 
 ### Uso e ociosidade
 

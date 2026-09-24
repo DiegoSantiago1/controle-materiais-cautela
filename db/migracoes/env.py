@@ -9,7 +9,7 @@ Diferenças em relação ao template:
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import create_engine, pool
+from sqlalchemy import URL, create_engine, pool
 
 from almox.config import carregar_config_banco
 
@@ -21,10 +21,17 @@ if config.config_file_name is not None:
 target_metadata = None
 
 
+def _url() -> URL:
+    """URL do banco. Os testes injetam a URL do banco de testes via config.attributes
+    (mecanismo do Alembic para passar objetos ao env.py); sem isso, vale o .env."""
+    injetada = config.attributes.get("url")
+    return injetada if isinstance(injetada, URL) else carregar_config_banco().url()
+
+
 def run_migrations_offline() -> None:
     """Modo offline (`alembic upgrade --sql`): só gera o SQL, sem conectar ao banco."""
     context.configure(
-        url=carregar_config_banco().url(),
+        url=_url(),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -40,7 +47,7 @@ def run_migrations_online() -> None:
     No PostgreSQL o DDL é transacional: se uma migração falhar no meio, nada dela fica
     aplicado.
     """
-    connectable = create_engine(carregar_config_banco().url(), poolclass=pool.NullPool)
+    connectable = create_engine(_url(), poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
