@@ -3,6 +3,7 @@
 -- container PostgreSQL compartilhado com o Projeto 1.
 --   :banco       banco principal (dados do projeto)
 --   :banco_teste banco dos testes automatizados (apagado e recriado pelo pytest)
+--   :bi_usuario, :bi_senha  usuário somente leitura do Power BI
 --
 -- Roda como superusuário, uma vez (e pode rodar de novo sem quebrar nada).
 -- Não use diretamente: o `python -m almox.bootstrap` lê o .env, valida os
@@ -52,7 +53,32 @@ FROM unnest(ARRAY[:'banco', :'banco_teste']) AS b(nome)
 \gexec
 
 -- 4. Por padrão o PostgreSQL deixa QUALQUER role conectar em qualquer banco
---    (privilégio CONNECT do PUBLIC). Aqui só o dono conecta.
+--    (privilégio CONNECT do PUBLIC). Aqui só o dono conecta (e, pelo passo 5, o
+--    grupo de leitura do Power BI).
 SELECT format('REVOKE ALL ON DATABASE %I FROM PUBLIC', b.nome)
+FROM unnest(ARRAY[:'banco', :'banco_teste']) AS b(nome)
+\gexec
+
+-- 5. Leitura para o Power BI (menor privilégio). O grupo almox_leitura (sem login) recebe
+--    as permissões nas migrações (SELECT só nos schemas bi, analise e dq); o usuário de
+--    login do BI (nome e senha no .env) é membro do grupo e não tem mais nada.
+SELECT 'CREATE ROLE almox_leitura NOLOGIN'
+WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'almox_leitura')
+\gexec
+
+SELECT format('CREATE ROLE %I LOGIN', :'bi_usuario')
+WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'bi_usuario')
+\gexec
+
+SELECT format(
+    'ALTER ROLE %I LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD %L',
+    :'bi_usuario', :'bi_senha'
+)
+\gexec
+
+SELECT format('GRANT almox_leitura TO %I', :'bi_usuario')
+\gexec
+
+SELECT format('GRANT CONNECT ON DATABASE %I TO almox_leitura', b.nome)
 FROM unnest(ARRAY[:'banco', :'banco_teste']) AS b(nome)
 \gexec

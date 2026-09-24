@@ -35,12 +35,19 @@ class ConfigBanco:
     usuario: str
     # Banco usado pelos testes automatizados; é apagado e recriado a cada execução.
     nome_teste: str
-    # repr=False: a senha não aparece se o objeto for impresso num log ou traceback.
+    # Usuário somente leitura do Power BI (membro do grupo almox_leitura).
+    usuario_bi: str
+    # repr=False: as senhas não aparecem se o objeto for impresso num log ou traceback.
     senha: str = field(repr=False)
+    senha_bi: str = field(repr=False)
 
     def do_banco_de_teste(self) -> ConfigBanco:
         """Mesma configuração, apontando para o banco de testes."""
         return replace(self, nome=self.nome_teste)
+
+    def como_bi(self) -> ConfigBanco:
+        """Mesma configuração, conectando como o usuário somente leitura do Power BI."""
+        return replace(self, usuario=self.usuario_bi, senha=self.senha_bi)
 
     def url(self) -> URL:
         """URL do SQLAlchemy. URL.create trata caracteres especiais da senha sem escape manual."""
@@ -102,11 +109,21 @@ def carregar_config_banco(env: Mapping[str, str] | None = None) -> ConfigBanco:
             "banco de testes a cada execução."
         )
 
+    usuario = validar_identificador(_obrigatoria(env, "ALMOX_DB_USER"), "ALMOX_DB_USER")
+    usuario_bi = validar_identificador(_obrigatoria(env, "ALMOX_BI_USER"), "ALMOX_BI_USER")
+    if usuario_bi in (usuario, "almox_leitura"):
+        raise ConfigError(
+            "ALMOX_BI_USER precisa ser um usuário próprio, diferente do dono do banco e do "
+            "grupo almox_leitura."
+        )
+
     return ConfigBanco(
         host=_obrigatoria(env, "ALMOX_DB_HOST"),
         porta=_porta(_obrigatoria(env, "ALMOX_DB_PORT")),
         nome=nome,
-        usuario=validar_identificador(_obrigatoria(env, "ALMOX_DB_USER"), "ALMOX_DB_USER"),
+        usuario=usuario,
         senha=_obrigatoria(env, "ALMOX_DB_PASSWORD"),
         nome_teste=nome_teste,
+        usuario_bi=usuario_bi,
+        senha_bi=_obrigatoria(env, "ALMOX_BI_PASSWORD"),
     )

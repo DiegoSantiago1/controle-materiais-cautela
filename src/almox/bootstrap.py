@@ -53,6 +53,8 @@ def montar_entrada_psql(config: ConfigBanco, sql: str) -> str:
         "senha": config.senha,
         "banco": config.nome,
         "banco_teste": config.nome_teste,
+        "bi_usuario": config.usuario_bi,
+        "bi_senha": config.senha_bi,
     }
     definicoes = "".join(f"\\set {nome} {citar_valor_psql(v)}\n" for nome, v in variaveis.items())
     return definicoes + sql

@@ -55,7 +55,9 @@ def test_usuario_nao_consegue_criar_banco(config_banco: ConfigBanco) -> None:
             con.execute("CREATE DATABASE intruso")
 
 
-def test_somente_o_dono_pode_conectar(conexao: Conexao, config_banco: ConfigBanco) -> None:
+def test_somente_o_dono_e_a_leitura_podem_conectar(
+    conexao: Conexao, config_banco: ConfigBanco
+) -> None:
     # aclexplode abre a lista de permissões; grantee = 0 representa o PUBLIC (todo mundo).
     linhas = conexao.execute(
         """
@@ -64,7 +66,8 @@ def test_somente_o_dono_pode_conectar(conexao: Conexao, config_banco: ConfigBanc
         WHERE d.datname = current_database() AND a.privilege_type = 'CONNECT'
         """
     ).fetchall()
-    assert linhas == [(config_banco.usuario,)]
+    # O dono e o grupo somente leitura do Power BI; ninguém mais (nem PUBLIC).
+    assert sorted(linhas) == sorted([(config_banco.usuario,), ("almox_leitura",)])
 
 
 def test_usuario_nao_le_dados_do_projeto_1(config_banco: ConfigBanco) -> None:

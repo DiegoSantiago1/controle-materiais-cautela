@@ -51,7 +51,9 @@ def test_entrada_define_as_variaveis_antes_do_sql() -> None:
         nome="almoxarifado",
         usuario="almox",
         nome_teste="almoxarifado_teste",
+        usuario_bi="almox_bi",
         senha="s3nha",
+        senha_bi="s3nha_bi",
     )
     entrada = montar_entrada_psql(config, "SELECT 1;")
     linhas = entrada.splitlines()
@@ -61,6 +63,8 @@ def test_entrada_define_as_variaveis_antes_do_sql() -> None:
         "\\set banco 'almoxarifado'",
         "\\set banco_teste 'almoxarifado_teste'",
     ]
+    assert "\\set bi_usuario 'almox_bi'" in linhas
+    assert "\\set bi_senha 's3nha_bi'" in linhas
     assert entrada.endswith("SELECT 1;")
 
 
