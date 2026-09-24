@@ -10,6 +10,8 @@ __pycache__/
 # Dados brutos e reais: nunca versionar (confidencialidade e LGPD)
 data/raw/
 original/
+# Documentos de referência (ex.: PDF de carga real) nunca entram, mesmo fora de data/raw/
+*.pdf
 
 # Notebooks e ferramentas
 .ipynb_checkpoints/
