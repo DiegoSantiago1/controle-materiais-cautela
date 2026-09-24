@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import unicodedata
 from collections import Counter
+from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 
 import numpy as np
@@ -43,14 +44,14 @@ def _obrigatorio[T](valor: T | None, campo: str, evento: Evento) -> T:
     return valor
 
 
-def estado_final(dataset: Dataset) -> dict[str, EstadoUnidade]:
+def estado_final(eventos: Sequence[Evento]) -> dict[str, EstadoUnidade]:
     """Estado de cada unidade na data-âncora, reproduzindo os eventos em ordem.
 
     Mesmas regras das funções do banco; a carga confere que o resultado bate.
     """
     historico: dict[str, list[EstadoUnidade]] = {}
-    por_seq = {e.seq: e for e in dataset.eventos}
-    for e in dataset.eventos:
+    por_seq = {e.seq: e for e in eventos}
+    for e in eventos:
         if e.operacao == "entrada_unidade":
             status = "DISPONIVEL" if e.bmp else "AGUARDANDO_TOMBAMENTO"
             historico[_obrigatorio(e.unidade, "unidade", e)] = [EstadoUnidade(status, None, e.bmp)]
@@ -135,7 +136,7 @@ class GeradorPlanilha:
 
     # ------------------------------------------------------------ planilha limpa
     def linhas_limpas(self) -> list[Linha]:
-        estados = estado_final(self.d)
+        estados = estado_final(self.d.eventos)
         linhas = []
         for unidade in sorted(self.d.unidades, key=lambda u: (u.codigo, u.bmp or "~", u.ref)):
             estado = estados[unidade.ref]

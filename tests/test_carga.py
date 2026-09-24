@@ -19,17 +19,24 @@ from almox.gerador.saida import gravar
 from almox.gerador.simulacao import gerar
 
 from .apoio import valor
+from .cenario import Base, criar_material, criar_unidades
 
 pytestmark = [pytest.mark.integracao, pytest.mark.lento]
 
 
-def test_carga_completa_aceita_todos_os_eventos(banco_teste: ConfigBanco, tmp_path: Path) -> None:
+def test_carga_completa_aceita_todos_os_eventos(
+    banco_teste: ConfigBanco, base: Base, tmp_path: Path
+) -> None:
     dados = gerar()
     planilha = gerar_planilha(dados)
     manifesto = gravar(dados, planilha, tmp_path)
 
     # Sem recriar: os cadastros do conjunto convivem com os dos outros testes (códigos,
-    # matrículas e BMPs em faixas diferentes) no banco de testes.
+    # matrículas e BMPs em faixas diferentes) no banco de testes. Uma unidade "estranha"
+    # confirmada antes garante que a conferência só olha as unidades desta carga (antes
+    # da correção, ela falhava com KeyError se o banco tivesse outras unidades).
+    with conectar(banco_teste) as con:
+        criar_unidades(con, base, criar_material(con, base, "SERIAL", prazo_horas=12))
     resultado = carga.carregar(banco_teste, tmp_path, recriar=False)
 
     assert resultado["eventos"] == len(dados.eventos)

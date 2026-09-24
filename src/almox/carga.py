@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json
 import sys
 import time
 from collections.abc import Iterator
@@ -29,7 +28,7 @@ from psycopg import sql
 from almox.banco import Conexao, chamar_funcao, conectar
 from almox.config import RAIZ_PROJETO, ConfigBanco, ConfigError, carregar_config_banco
 from almox.gerador.planilha import estado_final
-from almox.gerador.simulacao import gerar
+from almox.gerador.simulacao import Evento
 from almox.migracoes import recriar_schema
 
 PASTA_PADRAO = RAIZ_PROJETO / "data" / "gerado"
@@ -301,18 +300,49 @@ class Carga:
         if divergencias:
             raise ErroDeCarga(f"estado diverge do histórico: {divergencias[:5]}")
 
-        manifesto = json.loads((self.pasta / "manifesto.json").read_text(encoding="utf-8"))
-        esperado = estado_final(gerar(manifesto["semente"], manifesto["ancora"]))
+        # Estado esperado: reconstruído em Python a partir dos MESMOS eventos carregados.
+        esperado = estado_final(eventos_do_csv(self.pasta))
         ref_por_id = {v: k for k, v in self.unidade.items()}
         no_banco = {
             ref_por_id[i]: (status, bmp)
             for i, status, bmp in self.con.execute(
-                "SELECT id, status, bmp FROM core.unidade_patrimonial"
+                "SELECT id, status, bmp FROM core.unidade_patrimonial WHERE id = ANY(%s)",
+                [list(ref_por_id)],
             )
         }
         diferentes = [ref for ref, e in esperado.items() if no_banco.get(ref) != (e.status, e.bmp)]
         if diferentes:
-            raise ErroDeCarga(f"estado final diferente do gerador em {diferentes[:5]}")
+            raise ErroDeCarga(f"estado final diferente do esperado em {diferentes[:5]}")
+
+
+def _inteiro_ou_nulo(texto: str) -> int | None:
+    return int(texto) if texto != "" else None
+
+
+def eventos_do_csv(pasta: Path) -> list[Evento]:
+    """Lê eventos.csv de volta para objetos Evento (mesma estrutura do gerador)."""
+    return [
+        Evento(
+            ocorrida_em=datetime.fromisoformat(e["ocorrida_em"]),
+            operacao=e["operacao"],
+            usuario=e["usuario"],
+            material=e["material"],
+            unidade=_ou_nulo(e["unidade"]),
+            pessoa=_ou_nulo(e["pessoa"]),
+            quantidade=_inteiro_ou_nulo(e["quantidade"]),
+            estado=_ou_nulo(e["estado"]),
+            novo_status=_ou_nulo(e["novo_status"]),
+            bmp=_ou_nulo(e["bmp"]),
+            numero_serie=_ou_nulo(e["numero_serie"]),
+            local=_ou_nulo(e["local"]),
+            setor_destino=_ou_nulo(e["setor_destino"]),
+            documento=_ou_nulo(e["documento"]),
+            observacao=_ou_nulo(e["observacao"]),
+            estorno_de=_inteiro_ou_nulo(e["estorno_de"]),
+            seq=int(e["seq"]),
+        )
+        for e in _ler(pasta, "eventos.csv")
+    ]
 
 
 def carregar(
@@ -357,6 +387,13 @@ def main(argumentos: list[str] | None = None) -> int:
         resultado = carregar(config, args.pasta)
     except (ConfigError, ErroDeCarga) as erro:
         print(f"Erro: {erro}", file=sys.stderr)
+        return 1
+    except psycopg.OperationalError as erro:
+        print(
+            f"Erro: banco inacessível ({erro}). Docker Desktop aberto? Já rodou "
+            "'python -m almox.bootstrap'?",
+            file=sys.stderr,
+        )
         return 1
     print(
         f"Carga concluída no banco {config.nome!r}: {resultado['eventos']:.0f} eventos em "
