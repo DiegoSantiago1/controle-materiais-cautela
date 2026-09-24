@@ -25,13 +25,15 @@ O sistema e **todos os dados são 100% fictícios**, gerados em Python. Nenhuma 
 | DQ | Qualidade de dados (10 regras) | [migração 0007](db/migracoes/versions/0007_qualidade_de_dados.py) · `SELECT dq.executar()` | Concluída |
 | A2 | Cautela e atrasos | [notebook](notebooks/02_cautela.ipynb) · [views SQL](db/migracoes/versions/0008_analise_cautela.py) | Concluída |
 | A3 | Uso e ociosidade | [notebook](notebooks/03_uso.ipynb) · [view SQL](db/migracoes/versions/0009_analise_uso.py) | Concluída |
-| A4 | Consumo e ruptura | — | Próxima |
+| A4 | Consumo e ruptura | [notebook](notebooks/04_consumo.ipynb) · [views SQL](db/migracoes/versions/0010_analise_consumo.py) | Concluída |
 
 **A1 em uma frase:** 47,8% das 358 linhas da planilha de carga têm algum problema, mas 146 delas são só de forma e se resolvem automaticamente; 24 vão para verificação humana, e o Depósito Central concentra 43,9% dos problemas com 15,5% das linhas. A conferência (SQL com `pg_trgm` e Levenshtein) acertou 100% dos erros do conjunto padrão e errou 2 de ~2.900 em sete conjuntos que nunca tinha visto.
 
 **A2 em uma frase:** o atraso é sobretudo de processo (ferramentas elétricas atrasam 45% na Manutenção e 5% fora dela); um ranking ingênuo acusaria 5 pessoas pontuais, enquanto o ajuste pelo material com intervalo de Wilson aponta 6 pessoas, entre elas os 4 reincidentes plantados pelo gerador, sem acusar nenhuma pontual.
 
 **A3 em uma frase:** 4 tipos concentram 81% das cautelas; R$ 64 mil (fictícios) estão parados em 6 tipos que não saíram nenhuma vez no ano, enquanto esmerilhadeira, lavadora, notebook e ferramentas elétricas passam de 10 a 57 dias com todas as unidades fora: dinheiro a remanejar da sobra para a falta.
+
+**A4 em uma frase:** calculando o ponto de reposição só pelo histórico (demanda nos dias com estoque, prazo real de cada compra), a análise acha os 3 mínimos mal calibrados (o do toner é 7 vezes menor que o necessário: 56 dias sem toner no ano), o fornecedor lento (38 dias contra 13) e os 3 excessos, acertando os 24 materiais aqui e em quatro conjuntos nunca vistos.
 
 Os notebooks são salvos já executados. Para reexecutar: `jupyter nbconvert --to notebook --execute --inplace notebooks/01_conferencia.ipynb` (com o banco carregado).
 

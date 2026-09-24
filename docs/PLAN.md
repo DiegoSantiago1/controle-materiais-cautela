@@ -207,7 +207,7 @@ Teto de horas por análise; se estourar, o escopo é revisto.
 | A2 | Cautela e atrasos: `LAG`/`LEAD`, ranking por pessoa e setor, unidades não localizadas | 8 | **Concluída**: views na migração 0008 (em vez de `sql/analises.sql`: versionadas e testadas), `EXPLAIN` da reconstrução (13 ms), notebook `02_cautela` (ver D16) |
 | M1 | Publicação intermediária (schema, gerador, A1, A2, README parcial) | 3 | Repositório apresentável |
 | A3 | Uso e ociosidade: taxa de utilização, curva ABC, sobra e falta | 8 | **Concluída**: view na migração 0009 (linhas do tempo de capacidade e de unidades fora, 63 ms), notebook `03_uso` |
-| A4 | Consumo e ruptura: ponto de reposição com NumPy × mínimo cadastrado | 10 | Os mínimos mal calibrados aparecem pela análise |
+| A4 | Consumo e ruptura: ponto de reposição com NumPy × mínimo cadastrado | 10 | **Concluída**: os 3 mínimos mal calibrados, o fornecedor lento e os excessos aparecem pela análise (24/24, e 24/24 em 4 sementes fora da amostra); views na migração 0010, notebook `04_consumo` (ver D17) |
 | V1 | Views para o Power BI | 3 | Power BI lê todas |
 | PB | Relatório Power BI | 10 | Uma página por pergunta de negócio |
 | R1 | README de case e prints | 5 | Toda afirmação foi conferida de novo |

@@ -133,6 +133,16 @@ aplicada sobre a demanda do mês de pico, deixou a maioria dos bem calibrados se
 
 **Cautela reconstruída, não armazenada.** A view `analise.vw_cautela` pareia cada retirada com a movimentação seguinte (`LEAD`), depois de tirar os pares estorno/estornada da sequência. Custa 13 ms para 5.994 cautelas (o anti-join dos estornos usa o índice único de `estorno_de_id`), por isso não foi materializada.
 
+## D17. Ponto de reposição: demanda censurada e prazo real
+
+**Decisão.** O ponto de reposição de cada material é calculado só pelo histórico: `d*L + z*raiz(L*var_d + d^2*var_L)`, com a demanda (*d*, var_d) medida **só nos dias em que havia estoque no início do dia** e o prazo (*L*, var_L) medido compra a compra, pela data do pedido registrada na entrada.
+
+**Por que excluir os dias sem estoque.** A demanda observada é censurada: sem estoque, a saída é zero porque não havia o que entregar. Incluir esses dias subestima justamente os itens que mais faltam: o cartucho parecia ter demanda 21% menor do que tem.
+
+**Limiares e validação.** Mínimo < 60% do ponto de reposição = mal calibrado; prazo > 1,5x o típico (com 3 compras ou mais) = fornecedor lento; acima do máximo em 70% dos dias = excesso. Acertou os 24 materiais no conjunto padrão e em quatro sementes fora da amostra, com margem folgada (bem calibrados >= 0,84; mal calibrados <= 0,23).
+
+**Bug que a análise revelou na carga.** A view de prazo voltou vazia: a carga não repassava a observação das entradas (onde está a data do pedido). Corrigido, com um teste de fidelidade campo a campo entre o CSV e o banco, comprovado nos dois sentidos (falha sem a correção, passa com ela).
+
 ## D10. Modelagem
 
 - **Categoria e subcategoria em duas tabelas**, e não uma tabela autorreferenciada: a profundidade é sempre dois níveis, e duas tabelas garantem isso sem truques.
