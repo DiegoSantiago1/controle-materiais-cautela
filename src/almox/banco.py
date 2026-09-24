@@ -7,6 +7,7 @@ from typing import Any
 import psycopg
 from psycopg import sql
 from psycopg.rows import TupleRow
+from sqlalchemy import Engine, create_engine
 
 from almox.config import ConfigBanco
 
@@ -23,6 +24,11 @@ def conectar(config: ConfigBanco, banco: str | None = None) -> Conexao:
         password=config.senha,
         connect_timeout=5,
     )
+
+
+def engine(config: ConfigBanco) -> Engine:
+    """Engine do SQLAlchemy (usada pelo Pandas para ler consultas em DataFrames)."""
+    return create_engine(config.url(), pool_pre_ping=True)
 
 
 def comando_funcao(nome: str, parametros: list[str]) -> sql.Composed:
