@@ -17,6 +17,19 @@ O sistema e **todos os dados são 100% fictícios**, gerados em Python. Nenhuma 
 3. **Uso e ociosidade:** quais equipamentos são muito usados, quais ficam parados, o que sobra e o que falta?
 4. **Consumo e ruptura:** quais itens de consumo vão acabar e quais têm o estoque mínimo mal definido?
 
+## Análises
+
+| # | Pergunta | Onde | Situação |
+|---|---|---|---|
+| A1 | Conferência da carga | [notebook](notebooks/01_conferencia.ipynb) · [view SQL](db/migracoes/versions/0006_analise_conferencia.py) | Concluída |
+| A2 | Cautela e atrasos | — | Próxima |
+| A3 | Uso e ociosidade | — | Planejada |
+| A4 | Consumo e ruptura | — | Planejada |
+
+**A1 em uma frase:** 47,8% das 358 linhas da planilha de carga têm algum problema, mas 146 delas são só de forma e se resolvem automaticamente; 24 vão para verificação humana, e o Depósito Central concentra 43,9% dos problemas com 15,5% das linhas. A conferência (SQL com `pg_trgm` e Levenshtein) acertou 100% dos erros do conjunto padrão e errou 2 de ~2.900 em sete conjuntos que nunca tinha visto.
+
+Os notebooks são salvos já executados. Para reexecutar: `jupyter nbconvert --to notebook --execute --inplace notebooks/01_conferencia.ipynb` (com o banco carregado).
+
 ## Tecnologias previstas
 
 `PostgreSQL` · `SQL` (CTEs e window functions) · `Python` (`Pandas`, `NumPy`) · `Power BI` · `Docker`

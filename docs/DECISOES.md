@@ -88,6 +88,17 @@ A primeira versão calculava o mínimo só com a demanda média e o prazo médio
 
 aplicada sobre a demanda do mês de pico, deixou a maioria dos bem calibrados sem nenhuma falta no ano, enquanto os mal calibrados faltam 5 a 7 vezes (medido em 5 sementes). A análise de consumo (Fase 2) terá de reencontrar isso só a partir do histórico.
 
+## D14. Conferência: detecção em SQL, avaliação em Python, validação fora da amostra
+
+**Decisão.** A detecção dos erros da planilha é uma view (`analise.vw_conferencia_planilha`): normalização de texto (sem acento, abreviações por extenso), similaridade de trigramas (`pg_trgm`) para achar o material mais parecido, distância de Levenshtein (`fuzzystrmatch`) para BMP com dígito trocado, e o estado atual do `core` para divergências. As três extensões são "trusted": o dono do banco instala sem superusuário. O Python lê a view, monta a planilha corrigida e mede precisão e revocação contra o gabarito.
+
+**Por quê.** A regra fica perto dos dados e é reaproveitável (o Power BI e a futura API leem a mesma view); o Pandas fica com o que ele faz melhor (avaliação, tabelas e gráficos).
+
+**Como evitei ajustar as regras aos dados.** 100% de acerto na base usada para construir as regras não prova nada. A view foi avaliada em sete sementes que nunca tinha visto: 2 erros em ~2.900, ambos o mesmo caso-limite (texto quebrado pela extração combinado com outro erro na mesma palavra), deixado documentado em vez de remendado. A avaliação fora da amostra revelou três defeitos reais, corrigidos na regra:
+- abreviação expandida sem o ponto (`'2 port as'` virava "portátil");
+- regras de nome exclusivas entre si (uma linha pode ter formatação diferente **e** digitação);
+- BMP vizinho escolhido só pela distância. Os BMPs de um lote são consecutivos, então vários candidatos ficam a 1 ou 2 dígitos. O número de série desempata, mas só se o dono dela não estiver listado com o próprio BMP (senão a série foi copiada).
+
 ## D10. Modelagem
 
 - **Categoria e subcategoria em duas tabelas**, e não uma tabela autorreferenciada: a profundidade é sempre dois níveis, e duas tabelas garantem isso sem truques.
