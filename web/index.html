@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#14573c" />
+    <meta name="description" content="Balcão do equipamentista: retirada e devolução de material em poucos toques (dados fictícios)." />
+    <title>Balcão de Cautelas</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="css/app.css" />
+    <script type="module" src="js/app.js"></script>
+  </head>
+  <body>
+    <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+    <!-- Tela de entrada -->
+    <main id="tela-entrar" class="entrar" hidden>
+      <form id="form-entrar" class="cartao entrar__cartao" novalidate>
+        <div class="marca">
+          <svg class="marca__icone" viewBox="0 0 32 32" aria-hidden="true">
+            <rect x="3" y="9" width="26" height="18" rx="3" />
+            <path d="M11 9V6.5A1.5 1.5 0 0 1 12.5 5h7A1.5 1.5 0 0 1 21 6.5V9" />
+            <path d="M3 16h26M14 16v3h4v-3" />
+          </svg>
+          <div>
+            <h1 class="marca__titulo">Balcão de Cautelas</h1>
+            <p class="marca__sub">Controle de Materiais · dados fictícios</p>
+          </div>
+        </div>
+        <label class="campo">
+          <span class="campo__rotulo">Login</span>
+          <input id="entrar-login" name="login" autocomplete="username" autocapitalize="none" spellcheck="false" required maxlength="32" />
+        </label>
+        <label class="campo">
+          <span class="campo__rotulo">Senha</span>
+          <input id="entrar-senha" name="senha" type="password" autocomplete="current-password" required maxlength="128" />
+        </label>
+        <p id="entrar-erro" class="erro" role="alert" hidden></p>
+        <button class="botao botao--primario botao--largo" type="submit">Entrar</button>
+      </form>
+    </main>
+
+    <!-- Aplicação -->
+    <div id="tela-app" hidden>
+      <header class="topo">
+        <div class="topo__marca">
+          <svg class="topo__icone" viewBox="0 0 32 32" aria-hidden="true">
+            <rect x="3" y="9" width="26" height="18" rx="3" />
+            <path d="M11 9V6.5A1.5 1.5 0 0 1 12.5 5h7A1.5 1.5 0 0 1 21 6.5V9" />
+            <path d="M3 16h26M14 16v3h4v-3" />
+          </svg>
+          <span>Balcão de Cautelas</span>
+        </div>
+        <div class="topo__usuario">
+          <span id="usuario-nome" class="topo__nome"></span>
+          <span id="usuario-perfil" class="topo__perfil"></span>
+          <button id="botao-sair" class="botao botao--fantasma botao--pequeno" type="button">Sair</button>
+        </div>
+      </header>
+
+      <nav class="abas" aria-label="Seções">
+        <button class="abas__aba" type="button" data-aba="abertas" aria-current="page">
+          Em aberto <span id="contador-abertas" class="abas__contador"></span>
+        </button>
+        <button class="abas__aba" type="button" data-aba="retirada">Nova retirada</button>
+      </nav>
+
+      <main id="conteudo" tabindex="-1">
+        <!-- Cautelas em aberto -->
+        <section id="aba-abertas" class="aba" aria-labelledby="titulo-abertas">
+          <h2 id="titulo-abertas" class="visualmente-oculto">Cautelas em aberto</h2>
+          <div class="resumo" id="resumo-abertas" aria-live="polite"></div>
+          <label class="campo campo--busca">
+            <span class="campo__rotulo">Filtrar</span>
+            <input id="filtro-abertas" type="search" placeholder="Material, BMP, pessoa ou setor" autocomplete="off" />
+          </label>
+          <p id="aviso-consulta" class="aviso" hidden>Perfil de consulta: você vê as cautelas, mas não registra movimentações.</p>
+          <ul id="lista-abertas" class="lista" aria-live="polite"></ul>
+        </section>
+
+        <!-- Nova retirada -->
+        <section id="aba-retirada" class="aba" aria-labelledby="titulo-retirada" hidden>
+          <h2 id="titulo-retirada" class="visualmente-oculto">Nova retirada</h2>
+          <form id="form-retirada" novalidate>
+            <ol class="passos">
+              <li class="passo" id="passo-material">
+                <span class="passo__numero" aria-hidden="true">1</span>
+                <div class="passo__corpo">
+                  <label class="campo">
+                    <span class="campo__rotulo">Material</span>
+                    <input id="busca-material" type="search" placeholder="Nome, BMP ou número de série" autocomplete="off" />
+                  </label>
+                  <div id="escolhido-material" class="escolhido" hidden></div>
+                  <ul id="resultados-material" class="resultados" aria-label="Unidades encontradas"></ul>
+                </div>
+              </li>
+              <li class="passo" id="passo-pessoa">
+                <span class="passo__numero" aria-hidden="true">2</span>
+                <div class="passo__corpo">
+                  <label class="campo">
+                    <span class="campo__rotulo">Quem recebe</span>
+                    <input id="busca-pessoa" type="search" placeholder="Nome ou matrícula" autocomplete="off" />
+                  </label>
+                  <div id="escolhido-pessoa" class="escolhido" hidden></div>
+                  <ul id="resultados-pessoa" class="resultados" aria-label="Pessoas encontradas"></ul>
+                </div>
+              </li>
+              <li class="passo" id="passo-confirmar">
+                <span class="passo__numero" aria-hidden="true">3</span>
+                <div class="passo__corpo">
+                  <label class="campo">
+                    <span class="campo__rotulo">Finalidade <span class="opcional">(opcional)</span></span>
+                    <input id="retirada-finalidade" maxlength="200" autocomplete="off" />
+                  </label>
+                  <p id="retirada-erro" class="erro" role="alert" hidden></p>
+                  <p id="aviso-consulta-retirada" class="aviso" hidden>Perfil de consulta: você pode buscar materiais e pessoas, mas não registra a retirada.</p>
+                  <button id="botao-retirar" class="botao botao--primario botao--largo" type="submit" disabled>Confirmar retirada</button>
+                </div>
+              </li>
+            </ol>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <!-- Devolução -->
+    <dialog id="dialogo-devolucao" class="dialogo" aria-labelledby="devolucao-titulo">
+      <form id="form-devolucao" method="dialog" novalidate>
+        <h2 id="devolucao-titulo" class="dialogo__titulo">Receber devolução</h2>
+        <p id="devolucao-resumo" class="dialogo__resumo"></p>
+        <fieldset class="estados">
+          <legend class="campo__rotulo">Estado do material</legend>
+          <label class="estado"><input type="radio" name="estado" value="BOM" checked /><span>Bom</span></label>
+          <label class="estado"><input type="radio" name="estado" value="AVARIADO" /><span>Avariado</span></label>
+          <label class="estado"><input type="radio" name="estado" value="INSERVIVEL" /><span>Inservível</span></label>
+        </fieldset>
+        <label class="campo">
+          <span class="campo__rotulo">Observação <span id="observacao-regra" class="opcional">(opcional)</span></span>
+          <textarea id="devolucao-observacao" rows="3" maxlength="500"></textarea>
+        </label>
+        <p id="devolucao-erro" class="erro" role="alert" hidden></p>
+        <div class="dialogo__acoes">
+          <button id="devolucao-cancelar" class="botao botao--fantasma" type="button">Cancelar</button>
+          <button id="devolucao-confirmar" class="botao botao--primario" type="submit">Confirmar devolução</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="avisos" class="avisos" role="status" aria-live="polite"></div>
+  </body>
+</html>
