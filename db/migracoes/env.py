@@ -47,7 +47,11 @@ def run_migrations_online() -> None:
     No PostgreSQL o DDL é transacional: se uma migração falhar no meio, nada dela fica
     aplicado.
     """
-    connectable = create_engine(_url(), poolclass=pool.NullPool)
+    # connect_timeout: com o banco fora do ar, falha em 5 s com mensagem clara, em vez de
+    # esperar o tempo limite do sistema operacional (medido: mais de 2 minutos no Windows).
+    connectable = create_engine(
+        _url(), poolclass=pool.NullPool, connect_args={"connect_timeout": 5}
+    )
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)

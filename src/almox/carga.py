@@ -23,6 +23,7 @@ from datetime import datetime
 from pathlib import Path
 
 import psycopg
+import sqlalchemy.exc
 from psycopg import sql
 
 from almox.banco import Conexao, chamar_funcao, conectar
@@ -373,8 +374,14 @@ def carregar(
 
 
 def main(argumentos: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Carrega data/gerado no banco principal.")
+    parser = argparse.ArgumentParser(description="Carrega data/gerado no banco do projeto.")
     parser.add_argument("--pasta", type=Path, default=PASTA_PADRAO)
+    parser.add_argument(
+        "--banco",
+        choices=["principal", "app"],
+        default="principal",
+        help="principal: o das análises e do Power BI; app: o da tela do equipamentista",
+    )
     parser.add_argument(
         "--recriar",
         action="store_true",
@@ -383,15 +390,19 @@ def main(argumentos: list[str] | None = None) -> int:
     args = parser.parse_args(argumentos)
     if not args.recriar:
         parser.error(
-            "use --recriar para confirmar: a carga apaga todos os dados do banco principal"
+            "use --recriar para confirmar: a carga apaga todos os dados do banco escolhido"
         )
     try:
         config = carregar_config_banco()
+        if args.banco == "app":
+            config = config.do_banco_da_aplicacao()
         resultado = carregar(config, args.pasta)
     except (ConfigError, ErroDeCarga) as erro:
         print(f"Erro: {erro}", file=sys.stderr)
         return 1
-    except psycopg.OperationalError as erro:
+    except (psycopg.OperationalError, sqlalchemy.exc.OperationalError) as erro:
+        # A recriação do schema passa pelo Alembic (SQLAlchemy), que embrulha o erro do
+        # psycopg no dele: sem pegar os dois, o banco fora do ar vira um traceback.
         print(
             f"Erro: banco inacessível ({erro}). Docker Desktop aberto? Já rodou "
             "'python -m almox.bootstrap'?",
