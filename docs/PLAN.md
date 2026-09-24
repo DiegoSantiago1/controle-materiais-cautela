@@ -138,9 +138,9 @@ Regras gerais: semente fixa, data-âncora (`--ate 2026-08-31`, período de 12 me
 | ID | Padrão |
 |---|---|
 | P8 | Demanda diária com sazonalidade por categoria e sem movimento nos fins de semana. |
-| P9 | ~15 tipos bem calibrados, ~4 com ruptura recorrente e ~3 com excesso persistente. |
-| P10 | Três tipos com estoque mínimo mal calibrado de propósito (menor que a demanda durante o prazo de reposição). |
-| P11 | Entradas em lotes de compra, com prazo de reposição variável (7 a 21 dias). |
+| P9 | 17 tipos bem calibrados (a maioria sem nenhuma falta no ano), 4 com ruptura recorrente (3 mal calibrados + 1 com fornecedor lento) e 3 com excesso persistente (compra de mais de um ano de demanda). |
+| P10 | Três tipos com estoque mínimo mal calibrado de propósito (menor que a demanda durante o prazo de reposição): 5 a 7 episódios de falta no ano, medido em 5 sementes. |
+| P11 | Entradas em lotes de compra, com prazo de reposição variável: 7 a 21 dias, e 25 a 45 no fornecedor lento. A data do pedido vai na observação da entrada, como numa nota de empenho, para a análise medir o prazo. |
 
 A análise deve encontrar P10 comparando o mínimo cadastrado com o ponto de reposição calculado (`d·L + z·σ·√L`).
 
@@ -181,7 +181,7 @@ As horas de cada tarefa abaixo são de implementação. O total de cada fase já
 | T0.2 | README com o status do projeto |
 | T0.3 | `data/raw/` fora do git |
 
-### Fase 1 — Dados (~43 h com revisão)
+### Fase 1 — Dados (~43 h com revisão) — concluída em 24/09/2026
 
 | # | Tarefa | h | Pronto quando |
 |---|---|---|---|

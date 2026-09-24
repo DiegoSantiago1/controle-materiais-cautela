@@ -68,6 +68,26 @@ As migrações usam `op.execute("""SQL""")`, sem geração automática a partir 
 
 **Medido.** No Windows, `localhost` resolve primeiro para o IPv6 `::1`, mas o container publica a porta só em IPv4. Cada conexão esperava o timeout do `::1`: 5,09 s por `localhost` contra 0,02 s por `127.0.0.1`. A suíte de testes caiu de 47,9 s para 3,8 s.
 
+## D11. Carga pelas funções do banco, com conferência cruzada
+
+**Decisão.** A carga dos dados gerados não faz `INSERT` direto no histórico: cada um dos ~15,7 mil eventos passa pela função de regra correspondente, numa única transação. No fim, a view de divergência precisa estar vazia e o estado final de cada unidade no banco precisa bater com o estado que o gerador calculou em Python.
+
+**Por quê.** É um teste cruzado entre duas implementações independentes das mesmas regras. Ele achou um defeito real no gerador: um "conserto concluído" lançado num sábado pelo equipamentista de serviço, que o banco recusou (só estoquista ou administrador mudam a situação de uma unidade).
+
+**Medido.** ~50 s para 15,7 mil eventos (3,2 ms por evento): 1,45 ms de ida e volta de rede (Docker Desktop no Windows) e o resto de trabalho no servidor (cada função faz umas dez operações). Um *pipeline* do psycopg economizaria no máximo a parte da rede, com tratamento de erro bem mais difícil (identificar o evento recusado). Descartado: a carga roda uma vez.
+
+## D12. Dados gerados fora do git, manifesto dentro
+
+Os CSVs (~1,6 MB) são reproduzíveis pelo gerador e não são versionados. O `manifesto.json` é: guarda a semente, a data final e o SHA-256 de cada arquivo. Regenerar e comparar os hashes é a prova de reprodutibilidade (conferida: 12 de 12 arquivos idênticos).
+
+## D13. Estoque mínimo: a fórmula que o gerador usa para "bem calibrado"
+
+A primeira versão calculava o mínimo só com a demanda média e o prazo médio. Medindo os dados gerados, itens "bem calibrados" faltavam 4 a 7 vezes por ano, o que apagava o contraste com os mal calibrados. Faltavam dois termos: a **variação do prazo do fornecedor** e o **pico sazonal**. A fórmula completa do estoque de segurança,
+
+    minimo = d*L + z * raiz(L * var_d + d^2 * var_L)
+
+aplicada sobre a demanda do mês de pico, deixou a maioria dos bem calibrados sem nenhuma falta no ano, enquanto os mal calibrados faltam 5 a 7 vezes (medido em 5 sementes). A análise de consumo (Fase 2) terá de reencontrar isso só a partir do histórico.
+
 ## D10. Modelagem
 
 - **Categoria e subcategoria em duas tabelas**, e não uma tabela autorreferenciada: a profundidade é sempre dois níveis, e duas tabelas garantem isso sem truques.

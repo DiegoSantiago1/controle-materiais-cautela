@@ -39,9 +39,18 @@ python -m almox.bootstrap
 
 # 4. Aplica as migrações
 alembic upgrade head
+
+# 5. Gera os dados fictícios (semente 42, 12 meses até 31/08/2026) em data/gerado/
+python -m almox.gerador
+
+# 6. Carrega no banco, passando cada evento pelas funções de regra (~1 min).
+#    --recriar é obrigatório: apaga e recria o schema (o histórico é imutável).
+python -m almox.carga --recriar
 ```
 
-**Atenção:** como o banco fica no container do outro projeto, um `docker compose down -v` lá apaga também este banco (o `-v` remove o volume). Para recriar, repita os passos 3 e 4.
+**Reprodutibilidade:** com a mesma semente e a mesma data final, o gerador produz arquivos byte a byte idênticos. O [manifesto](data/gerado/manifesto.json) (versionado) guarda o SHA-256 de cada arquivo: depois do passo 5, compare os seus hashes com os dele.
+
+**Atenção:** como o banco fica no container do outro projeto, um `docker compose down -v` lá apaga também este banco (o `-v` remove o volume). Para recriar, repita os passos 3 a 6.
 
 ### Qualidade
 
@@ -49,13 +58,14 @@ alembic upgrade head
 ruff format --check .             # formatação
 ruff check .                      # lint (inclui regras de segurança)
 mypy                              # verificação de tipos (modo strict)
-pytest                            # todos os testes (precisa do banco)
+pytest                            # todos os testes (precisa do banco; ~70 s)
+pytest -m "not lento"             # sem a carga completa (~15 s)
 pytest -m "not integracao"        # só os testes que não usam o banco
 ```
 
 ## Próximos passos
 
-1. Criar o schema com as regras de integridade (o banco, o usuário e as migrações já estão configurados).
-2. Gerar o dataset sintético com padrões documentados.
-3. Fazer as análises em SQL e Pandas, uma pergunta por vez.
+1. ~~Criar o banco, o schema com as regras de integridade e o gerador de dados com padrões documentados.~~ Feito (Fase 1).
+2. Fazer as análises em SQL e Pandas, uma pergunta por vez.
+3. Checagens automáticas de qualidade de dados.
 4. Montar o relatório no Power BI e escrever o README de case com os insights.
