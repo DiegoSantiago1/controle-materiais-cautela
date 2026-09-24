@@ -99,6 +99,28 @@ aplicada sobre a demanda do mês de pico, deixou a maioria dos bem calibrados se
 - regras de nome exclusivas entre si (uma linha pode ter formatação diferente **e** digitação);
 - BMP vizinho escolhido só pela distância. Os BMPs de um lote são consecutivos, então vários candidatos ficam a 1 ou 2 dígitos. O número de série desempata, mas só se o dono dela não estiver listado com o próprio BMP (senão a série foi copiada).
 
+## D15. Qualidade de dados: só checar o que o banco não impede
+
+**Contexto.** O plano listava checagens como "código duplicado", "saldo negativo", "movimentação sem usuário" e "quantidade inválida".
+
+**Decisão.** Essas já são impossíveis no `core` (UNIQUE, CHECK, NOT NULL, FK), e os testes de schema provam isso tentando violá-las. Uma checagem que nunca pode encontrar nada seria teatro. O schema `dq` cobre o que constraints não expressam:
+
+| Regra | O quê | Por que constraint não cobre |
+|---|---|---|
+| DQ01 | estado atual ≠ histórico | compara duas tabelas |
+| DQ02 | `saldo_antes` ≠ `saldo_depois` da anterior (`LAG`) | depende da linha anterior |
+| DQ03 | `status_anterior` ≠ `status_novo` da anterior (`LAG`) | idem |
+| DQ04 | unidade cautelada a pessoa já transferida | depende de data e de outra tabela |
+| DQ05 | retirada para pessoa fora do seu período | idem |
+| DQ06 | operação de um perfil que não poderia (hoje) | o perfil pode mudar depois |
+| DQ07 | unidade sem entrada no histórico | exige outra tabela |
+| DQ08 | material ativo sem unidades nem saldo | cadastro órfão |
+| DQ09, DQ10 | planilha: BMP fora do formato, campo obrigatório vazio | o staging aceita tudo de propósito |
+
+`dq.executar()` roda todas as regras e grava cada ocorrência em `dq.ocorrencia`. O SQL dinâmico usa o nome da view validado por CHECK e citado com `%I`.
+
+**Como sei que funcionam.** "Zero ocorrências" também é o que uma regra quebrada daria. Cada regra tem um teste que injeta a violação por fora das funções (INSERT/UPDATE direto) e confere que ela é registrada, mais um controle negativo com dados válidos. A DQ02 é a checagem que faltava: o experimento sem `FOR UPDATE` (D3) corrompeu o histórico sem mudar a soma, e a DQ01 não percebeu.
+
 ## D10. Modelagem
 
 - **Categoria e subcategoria em duas tabelas**, e não uma tabela autorreferenciada: a profundidade é sempre dois níveis, e duas tabelas garantem isso sem truques.

@@ -22,6 +22,7 @@ O sistema e **todos os dados são 100% fictícios**, gerados em Python. Nenhuma 
 | # | Pergunta | Onde | Situação |
 |---|---|---|---|
 | A1 | Conferência da carga | [notebook](notebooks/01_conferencia.ipynb) · [view SQL](db/migracoes/versions/0006_analise_conferencia.py) | Concluída |
+| DQ | Qualidade de dados (10 regras) | [migração 0007](db/migracoes/versions/0007_qualidade_de_dados.py) · `SELECT dq.executar()` | Concluída |
 | A2 | Cautela e atrasos | — | Próxima |
 | A3 | Uso e ociosidade | — | Planejada |
 | A4 | Consumo e ruptura | — | Planejada |

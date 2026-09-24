@@ -203,7 +203,7 @@ Teto de horas por análise; se estourar, o escopo é revisto.
 | # | Tarefa | h | Pronto quando |
 |---|---|---|---|
 | A1 | Conferência: SQL no `staging` + notebook Pandas de limpeza, com precisão e revocação | 10 | Notebook roda do zero, com insights escritos — **concluída** (view SQL + notebook `01_conferencia`) |
-| DQ | Checagens de data quality em SQL (material sem código, código duplicado, saldo negativo, movimentação sem usuário ou sem material, quantidade inválida, data inválida ou futura, referência inexistente), com cada ocorrência registrada em uma tabela de resultados | 3 | Cada checagem tem um teste que injeta o problema e confirma que ele é detectado |
+| DQ | Checagens de data quality em SQL (material sem código, código duplicado, saldo negativo, movimentação sem usuário ou sem material, quantidade inválida, data inválida ou futura, referência inexistente), com cada ocorrência registrada em uma tabela de resultados | 3 | Cada checagem tem um teste que injeta o problema e confirma que ele é detectado — **concluída** (migração 0007, schema `dq`, 10 regras; ver D15) |
 | A2 | Cautela e atrasos: `LAG`/`LEAD`, ranking por pessoa e setor, unidades não localizadas | 8 | Consultas em `sql/analises.sql`, com `EXPLAIN` nas principais |
 | M1 | Publicação intermediária (schema, gerador, A1, A2, README parcial) | 3 | Repositório apresentável |
 | A3 | Uso e ociosidade: taxa de utilização, curva ABC, sobra e falta | 8 | Idem A2 |
