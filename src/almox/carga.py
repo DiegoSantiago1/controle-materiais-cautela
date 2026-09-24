@@ -165,6 +165,7 @@ class Carga:
                 p_bmp=_ou_nulo(e["bmp"]),
                 p_numero_serie=_ou_nulo(e["numero_serie"]),
                 p_documento_ref=_ou_nulo(e["documento"]),
+                p_observacao=_ou_nulo(e["observacao"]),
             )
             return
         if operacao == "retirada_unidade":
@@ -175,6 +176,7 @@ class Carga:
                 p_unidade_id=self.unidade[e["unidade"]],
                 p_pessoa_id=pessoa,
                 p_setor_destino_id=setor,
+                p_observacao=_ou_nulo(e["observacao"]),
             )
         elif operacao == "devolucao_unidade":
             mov = chamar_funcao(
@@ -204,6 +206,7 @@ class Carga:
                 p_material_tipo_id=self.material[e["material"]],
                 p_quantidade=int(e["quantidade"]),
                 p_documento_ref=_ou_nulo(e["documento"]),
+                p_observacao=_ou_nulo(e["observacao"]),
             )
         elif operacao == "retirada_consumo":
             mov = chamar_funcao(
