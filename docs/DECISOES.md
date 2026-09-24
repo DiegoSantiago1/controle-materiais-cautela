@@ -121,6 +121,18 @@ aplicada sobre a demanda do mês de pico, deixou a maioria dos bem calibrados se
 
 **Como sei que funcionam.** "Zero ocorrências" também é o que uma regra quebrada daria. Cada regra tem um teste que injeta a violação por fora das funções (INSERT/UPDATE direto) e confere que ela é registrada, mais um controle negativo com dados válidos. A DQ02 é a checagem que faltava: o experimento sem `FOR UPDATE` (D3) corrompeu o histórico sem mudar a soma, e a DQ01 não percebeu.
 
+## D16. Atraso: separar pessoa de processo, com evidência estatística
+
+**Contexto.** A taxa de atraso crua por pessoa mistura quem a pessoa é com o material que ela usa. Na Manutenção, ferramentas elétricas atrasam 45% das vezes; fora dela, 5%.
+
+**Decisão.** Cada pessoa tem uma **taxa esperada**: a média, nas cautelas dela, da taxa geral do tipo de material. A pessoa só é apontada se o **limite inferior do intervalo de Wilson (95%)** da taxa observada ficar acima da esperada, com pelo menos 20 cautelas.
+
+**Por que Wilson.** Com poucas observações, a taxa engana: 1 atraso em 2 dá 50%. O intervalo de Wilson é largo com poucos dados e estreito com muitos. Ao contrário do intervalo "normal", ele não sai de [0, 1] e não colapsa em 0 ou 100% (testado com 0/10, 5/10 e 10/10).
+
+**Medido contra o gabarito.** Método ingênuo (acima da média geral): 11 pessoas apontadas, 5 delas **pontuais da Manutenção**, que seriam cobradas por um problema de processo. Método ajustado: 6 apontadas, os **4 reincidentes plantados** (todos, sem saber quem eram) e 2 ocasionais, que de fato atrasam acima do esperado. Nenhuma pontual.
+
+**Cautela reconstruída, não armazenada.** A view `analise.vw_cautela` pareia cada retirada com a movimentação seguinte (`LEAD`), depois de tirar os pares estorno/estornada da sequência. Custa 13 ms para 5.994 cautelas (o anti-join dos estornos usa o índice único de `estorno_de_id`), por isso não foi materializada.
+
 ## D10. Modelagem
 
 - **Categoria e subcategoria em duas tabelas**, e não uma tabela autorreferenciada: a profundidade é sempre dois níveis, e duas tabelas garantem isso sem truques.
