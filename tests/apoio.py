@@ -2,7 +2,9 @@
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import psycopg
 import pytest
@@ -38,3 +40,14 @@ def valor(con: Conexao, comando: str, parametros: dict[str, object] | None = Non
     linha = con.execute(comando, parametros).fetchone()
     assert linha is not None
     return linha[0]
+
+
+@dataclass(frozen=True)
+class CargaPadrao:
+    """Resultado da carga do conjunto padrão no banco de testes (fixture carga_padrao)."""
+
+    pasta: Path
+    eventos: int
+    linhas_planilha: int
+    resultado: dict[str, float]
+    manifesto: dict[str, object]

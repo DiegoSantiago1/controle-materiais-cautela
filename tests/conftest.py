@@ -19,12 +19,16 @@ import pytest
 from alembic import command
 from dotenv import load_dotenv
 
+from almox import carga
 from almox.banco import Conexao, conectar
 from almox.config import RAIZ_PROJETO, ConfigBanco, ConfigError, carregar_config_banco
+from almox.gerador.planilha import gerar_planilha
+from almox.gerador.saida import gravar
+from almox.gerador.simulacao import gerar
 from almox.migracoes import config_alembic
 
-from .apoio import valor
-from .cenario import Base, criar_base
+from .apoio import CargaPadrao, valor
+from .cenario import Base, criar_base, criar_material, criar_unidades
 
 load_dotenv(RAIZ_PROJETO / ".env", override=False)
 
@@ -127,3 +131,24 @@ def psql_superusuario() -> list[str]:
         "-d",
         "postgres",
     ]
+
+
+@pytest.fixture(scope="session")
+def carga_padrao(
+    banco_teste: ConfigBanco, base: Base, tmp_path_factory: pytest.TempPathFactory
+) -> CargaPadrao:
+    """O conjunto padrão (semente 42) carregado UMA vez no banco de testes (~50 s).
+
+    Carregado sem recriar o schema: convive com os cadastros dos outros testes (faixas de
+    códigos, matrículas e BMPs diferentes). Uma unidade "estranha" confirmada antes
+    garante que a conferência da carga só olha as unidades dela.
+    Usada pelo teste da carga e pelos testes das análises (marcados como `lento`).
+    """
+    dados = gerar()
+    planilha = gerar_planilha(dados)
+    pasta = tmp_path_factory.mktemp("gerado")
+    manifesto = gravar(dados, planilha, pasta)
+    with conectar(banco_teste) as con:
+        criar_unidades(con, base, criar_material(con, base, "SERIAL", prazo_horas=12))
+    resultado = carga.carregar(banco_teste, pasta, recriar=False)
+    return CargaPadrao(pasta, len(dados.eventos), len(planilha), resultado, manifesto)
