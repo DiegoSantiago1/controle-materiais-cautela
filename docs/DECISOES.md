@@ -68,6 +68,13 @@ As migrações usam `op.execute("""SQL""")`, sem geração automática a partir 
 
 **Medido.** No Windows, `localhost` resolve primeiro para o IPv6 `::1`, mas o container publica a porta só em IPv4. Cada conexão esperava o timeout do `::1`: 5,09 s por `localhost` contra 0,02 s por `127.0.0.1`. A suíte de testes caiu de 47,9 s para 3,8 s.
 
+## D10. Modelagem
+
+- **Categoria e subcategoria em duas tabelas**, e não uma tabela autorreferenciada: a profundidade é sempre dois níveis, e duas tabelas garantem isso sem truques.
+- **Prazo de devolução em horas** por tipo de material (rádio: 12 h, um turno); "0 dias" ficaria atrasado no mesmo instante.
+- **Pessoa com `data_saida`** (transferência). Uma cautela aberta com quem já saiu da unidade é o caso real de material "não localizado".
+- **Códigos auxiliares fora do modelo**: a planilha que serviu de referência tinha outros códigos além do número de patrimônio, cujo significado não foi confirmado. Não se modela o que não se sabe explicar.
+
 ## D11. Carga pelas funções do banco, com conferência cruzada
 
 **Decisão.** A carga dos dados gerados não faz `INSERT` direto no histórico: cada um dos ~15,7 mil eventos passa pela função de regra correspondente, numa única transação. No fim, a view de divergência precisa estar vazia e o estado final de cada unidade no banco precisa bater com o estado que o gerador calculou em Python.
@@ -150,10 +157,3 @@ aplicada sobre a demanda do mês de pico, deixou a maioria dos bem calibrados se
 **A armadilha que apareceu.** Views rodam com os direitos do dono, mas as funções chamadas dentro delas rodam com os de quem consulta. `analise.momento_referencia()` falhou para o BI. Solução: ela passou a `SECURITY DEFINER` com `search_path` fixo (devolve um único número), e só `core.data_local()` (conta de fuso) foi liberada ao grupo. De quebra, o `EXECUTE` padrão do PUBLIC foi retirado de todas as funções do `core`, inclusive das futuras: as funções de escrita ficam só com o dono.
 
 **Caso-limite.** Sem nenhuma movimentação, a data de referência era NULL e todas as views com período ficavam vazias sem explicação. Agora é "última movimentação ou agora".
-
-## D10. Modelagem
-
-- **Categoria e subcategoria em duas tabelas**, e não uma tabela autorreferenciada: a profundidade é sempre dois níveis, e duas tabelas garantem isso sem truques.
-- **Prazo de devolução em horas** por tipo de material (rádio: 12 h, um turno); "0 dias" ficaria atrasado no mesmo instante.
-- **Pessoa com `data_saida`** (transferência). Uma cautela aberta com quem já saiu da unidade é o caso real de material "não localizado".
-- **Códigos auxiliares fora do modelo**: a planilha que serviu de referência tinha outros códigos além do número de patrimônio, cujo significado não foi confirmado. Não se modela o que não se sabe explicar.
