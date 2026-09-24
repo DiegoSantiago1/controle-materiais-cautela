@@ -4,6 +4,8 @@
 --   :banco       banco principal (dados do projeto)
 --   :banco_teste banco dos testes automatizados (apagado e recriado pelo pytest)
 --   :bi_usuario, :bi_senha  usuário somente leitura do Power BI
+--   :banco_app   banco da aplicação (API + tela do equipamentista)
+--   :app_usuario, :app_senha  usuário da API (só movimenta pelas funções de regra)
 --
 -- Roda como superusuário, uma vez (e pode rodar de novo sem quebrar nada).
 -- Não use diretamente: o `python -m almox.bootstrap` lê o .env, valida os
@@ -36,27 +38,27 @@ SELECT format(
 )
 \gexec
 
--- 2. Bancos do projeto (principal e de testes), pertencentes ao usuário do projeto.
+-- 2. Bancos do projeto (principal, de testes e da aplicação), pertencentes ao usuário do projeto.
 SELECT format('CREATE DATABASE %I OWNER %I ENCODING %L TEMPLATE template0', b.nome, :'usuario', 'UTF8')
-FROM unnest(ARRAY[:'banco', :'banco_teste']) AS b(nome)
+FROM unnest(ARRAY[:'banco', :'banco_teste', :'banco_app']) AS b(nome)
 WHERE NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = b.nome)
 \gexec
 
 SELECT format('ALTER DATABASE %I OWNER TO %I', b.nome, :'usuario')
-FROM unnest(ARRAY[:'banco', :'banco_teste']) AS b(nome)
+FROM unnest(ARRAY[:'banco', :'banco_teste', :'banco_app']) AS b(nome)
 \gexec
 
 -- 3. Fuso horário na origem (lição do Projeto 1): toda sessão nestes bancos
 --    enxerga horários em America/Recife; as colunas de data e hora são TIMESTAMPTZ.
 SELECT format('ALTER DATABASE %I SET timezone TO %L', b.nome, 'America/Recife')
-FROM unnest(ARRAY[:'banco', :'banco_teste']) AS b(nome)
+FROM unnest(ARRAY[:'banco', :'banco_teste', :'banco_app']) AS b(nome)
 \gexec
 
 -- 4. Por padrão o PostgreSQL deixa QUALQUER role conectar em qualquer banco
 --    (privilégio CONNECT do PUBLIC). Aqui só o dono conecta (e, pelo passo 5, o
 --    grupo de leitura do Power BI).
 SELECT format('REVOKE ALL ON DATABASE %I FROM PUBLIC', b.nome)
-FROM unnest(ARRAY[:'banco', :'banco_teste']) AS b(nome)
+FROM unnest(ARRAY[:'banco', :'banco_teste', :'banco_app']) AS b(nome)
 \gexec
 
 -- 5. Leitura para o Power BI (menor privilégio). O grupo almox_leitura (sem login) recebe
@@ -81,4 +83,30 @@ SELECT format('GRANT almox_leitura TO %I', :'bi_usuario')
 
 SELECT format('GRANT CONNECT ON DATABASE %I TO almox_leitura', b.nome)
 FROM unnest(ARRAY[:'banco', :'banco_teste']) AS b(nome)
+\gexec
+
+-- 6. Usuário da API (menor privilégio). O grupo almox_aplicacao (sem login) recebe as
+--    permissões nas migrações: ler cadastros e estado, executar SÓ as funções de regra
+--    que a tela usa, e nenhuma escrita direta em tabela do core. O usuário de login da API
+--    (nome e senha no .env) é membro do grupo e não tem mais nada. Conecta no banco da
+--    aplicação e no de testes (onde a API é testada), nunca no banco das análises.
+SELECT 'CREATE ROLE almox_aplicacao NOLOGIN'
+WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'almox_aplicacao')
+\gexec
+
+SELECT format('CREATE ROLE %I LOGIN', :'app_usuario')
+WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'app_usuario')
+\gexec
+
+SELECT format(
+    'ALTER ROLE %I LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD %L',
+    :'app_usuario', :'app_senha'
+)
+\gexec
+
+SELECT format('GRANT almox_aplicacao TO %I', :'app_usuario')
+\gexec
+
+SELECT format('GRANT CONNECT ON DATABASE %I TO almox_aplicacao', b.nome)
+FROM unnest(ARRAY[:'banco_app', :'banco_teste']) AS b(nome)
 \gexec

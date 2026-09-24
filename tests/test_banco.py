@@ -110,3 +110,17 @@ def test_senha_errada_e_recusada(config_banco: ConfigBanco) -> None:
             password=config_banco.senha + "_errada",
             connect_timeout=5,
         )
+
+
+def test_banco_da_aplicacao_so_aceita_o_dono_e_a_api(config_banco: ConfigBanco) -> None:
+    """O Power BI não conecta no banco da aplicação; a API não conecta no das análises
+    (este segundo lado é testado em test_aplicacao.py)."""
+    with conectar(config_banco.do_banco_da_aplicacao()) as con:
+        linhas = con.execute(
+            """
+            SELECT CASE WHEN a.grantee = 0 THEN 'PUBLIC' ELSE pg_get_userbyid(a.grantee) END
+            FROM pg_database d, aclexplode(d.datacl) a
+            WHERE d.datname = current_database() AND a.privilege_type = 'CONNECT'
+            """
+        ).fetchall()
+    assert sorted(linhas) == sorted([(config_banco.usuario,), ("almox_aplicacao",)])

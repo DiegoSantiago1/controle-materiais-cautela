@@ -13,6 +13,9 @@ ENV_VALIDO = {
     "ALMOX_DB_PASSWORD": "senha_de_teste",
     "ALMOX_BI_USER": "almox_bi",
     "ALMOX_BI_PASSWORD": "senha_bi_de_teste",
+    "ALMOX_DB_NAME_APP": "almoxarifado_app",
+    "ALMOX_APP_USER": "almox_api",
+    "ALMOX_APP_PASSWORD": "senha_app_de_teste",
 }
 
 
@@ -77,7 +80,15 @@ def test_porta_invalida(porta: str) -> None:
     ],
 )
 @pytest.mark.parametrize(
-    "variavel", ["ALMOX_DB_NAME", "ALMOX_DB_NAME_TESTE", "ALMOX_DB_USER", "ALMOX_BI_USER"]
+    "variavel",
+    [
+        "ALMOX_DB_NAME",
+        "ALMOX_DB_NAME_TESTE",
+        "ALMOX_DB_NAME_APP",
+        "ALMOX_DB_USER",
+        "ALMOX_BI_USER",
+        "ALMOX_APP_USER",
+    ],
 )
 def test_identificador_hostil_e_recusado(variavel: str, nome: str) -> None:
     with pytest.raises(ConfigError, match=variavel):
@@ -106,7 +117,7 @@ def test_identificador_no_limite_de_63_e_aceito() -> None:
     assert carregar_config_banco(env_com(ALMOX_DB_USER="a" * 63)).usuario == "a" * 63
 
 
-@pytest.mark.parametrize("usuario_bi", ["almox", "almox_leitura"])
+@pytest.mark.parametrize("usuario_bi", ["almox", "almox_leitura", "almox_aplicacao"])
 def test_usuario_do_bi_precisa_ser_proprio(usuario_bi: str) -> None:
     """O BI não pode usar o dono do banco (que altera tudo) nem o nome do grupo."""
     with pytest.raises(ConfigError, match="ALMOX_BI_USER"):
@@ -117,3 +128,23 @@ def test_como_bi_troca_usuario_e_senha() -> None:
     bi = carregar_config_banco(ENV_VALIDO).como_bi()
     assert (bi.usuario, bi.senha, bi.nome) == ("almox_bi", "senha_bi_de_teste", "almoxarifado")
     assert "senha_bi_de_teste" not in repr(bi)
+
+
+@pytest.mark.parametrize("nome_app", ["almoxarifado", "almoxarifado_teste"])
+def test_banco_da_aplicacao_precisa_ser_proprio(nome_app: str) -> None:
+    """No banco das análises, a aplicação mudaria os números; no de testes, seria apagada."""
+    with pytest.raises(ConfigError, match="ALMOX_DB_NAME_APP"):
+        carregar_config_banco(env_com(ALMOX_DB_NAME_APP=nome_app))
+
+
+@pytest.mark.parametrize("usuario_app", ["almox", "almox_bi", "almox_leitura", "almox_aplicacao"])
+def test_usuario_da_aplicacao_precisa_ser_proprio(usuario_app: str) -> None:
+    with pytest.raises(ConfigError, match="ALMOX_APP_USER"):
+        carregar_config_banco(env_com(ALMOX_APP_USER=usuario_app))
+
+
+def test_do_banco_da_aplicacao_troca_so_o_nome_do_banco() -> None:
+    config = carregar_config_banco(ENV_VALIDO)
+    app = config.do_banco_da_aplicacao()
+    assert (app.nome, app.usuario, app.senha) == ("almoxarifado_app", "almox", config.senha)
+    assert "senha_app_de_teste" not in repr(config)

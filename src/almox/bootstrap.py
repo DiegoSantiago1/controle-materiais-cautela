@@ -55,6 +55,9 @@ def montar_entrada_psql(config: ConfigBanco, sql: str) -> str:
         "banco_teste": config.nome_teste,
         "bi_usuario": config.usuario_bi,
         "bi_senha": config.senha_bi,
+        "banco_app": config.nome_app,
+        "app_usuario": config.usuario_app,
+        "app_senha": config.senha_app,
     }
     definicoes = "".join(f"\\set {nome} {citar_valor_psql(v)}\n" for nome, v in variaveis.items())
     return definicoes + sql
@@ -127,7 +130,7 @@ def main() -> int:
     # flush: sem ele a mensagem fica no buffer e aparece depois da saída do psql.
     print(
         f"Criando/atualizando o usuário {banco.usuario!r} e os bancos "
-        f"{banco.nome!r} e {banco.nome_teste!r}...",
+        f"{banco.nome!r}, {banco.nome_teste!r} e {banco.nome_app!r}...",
         flush=True,
     )
     resultado = subprocess.run(  # noqa: S603 (argumentos validados, sem shell)

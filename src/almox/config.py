@@ -37,17 +37,31 @@ class ConfigBanco:
     nome_teste: str
     # Usuário somente leitura do Power BI (membro do grupo almox_leitura).
     usuario_bi: str
+    # Banco da aplicação (API + tela do equipamentista), separado do banco das análises
+    # para que o uso da aplicação não mude os números dos notebooks e do Power BI.
+    nome_app: str
+    # Usuário da API (membro do grupo almox_aplicacao): movimenta só pelas funções de regra.
+    usuario_app: str
     # repr=False: as senhas não aparecem se o objeto for impresso num log ou traceback.
     senha: str = field(repr=False)
     senha_bi: str = field(repr=False)
+    senha_app: str = field(repr=False)
 
     def do_banco_de_teste(self) -> ConfigBanco:
         """Mesma configuração, apontando para o banco de testes."""
         return replace(self, nome=self.nome_teste)
 
+    def do_banco_da_aplicacao(self) -> ConfigBanco:
+        """Mesma configuração (dono do banco), apontando para o banco da aplicação."""
+        return replace(self, nome=self.nome_app)
+
     def como_bi(self) -> ConfigBanco:
         """Mesma configuração, conectando como o usuário somente leitura do Power BI."""
         return replace(self, usuario=self.usuario_bi, senha=self.senha_bi)
+
+    def como_aplicacao(self) -> ConfigBanco:
+        """Mesma configuração, conectando como o usuário da API (grupo almox_aplicacao)."""
+        return replace(self, usuario=self.usuario_app, senha=self.senha_app)
 
     def url(self) -> URL:
         """URL do SQLAlchemy. URL.create trata caracteres especiais da senha sem escape manual."""
@@ -109,12 +123,26 @@ def carregar_config_banco(env: Mapping[str, str] | None = None) -> ConfigBanco:
             "banco de testes a cada execução."
         )
 
+    nome_app = validar_identificador(_obrigatoria(env, "ALMOX_DB_NAME_APP"), "ALMOX_DB_NAME_APP")
+    if nome_app in (nome, nome_teste):
+        raise ConfigError(
+            "ALMOX_DB_NAME_APP precisa ser diferente de ALMOX_DB_NAME e de ALMOX_DB_NAME_TESTE: "
+            "a aplicação não pode alterar o banco das análises nem ser apagada pelos testes."
+        )
+
     usuario = validar_identificador(_obrigatoria(env, "ALMOX_DB_USER"), "ALMOX_DB_USER")
     usuario_bi = validar_identificador(_obrigatoria(env, "ALMOX_BI_USER"), "ALMOX_BI_USER")
-    if usuario_bi in (usuario, "almox_leitura"):
+    usuario_app = validar_identificador(_obrigatoria(env, "ALMOX_APP_USER"), "ALMOX_APP_USER")
+    grupos = ("almox_leitura", "almox_aplicacao")
+    if usuario_bi in (usuario, *grupos):
         raise ConfigError(
-            "ALMOX_BI_USER precisa ser um usuário próprio, diferente do dono do banco e do "
-            "grupo almox_leitura."
+            "ALMOX_BI_USER precisa ser um usuário próprio, diferente do dono do banco e dos "
+            "grupos almox_leitura e almox_aplicacao."
+        )
+    if usuario_app in (usuario, usuario_bi, *grupos):
+        raise ConfigError(
+            "ALMOX_APP_USER precisa ser um usuário próprio, diferente do dono do banco, do "
+            "usuário do BI e dos grupos almox_leitura e almox_aplicacao."
         )
 
     return ConfigBanco(
@@ -126,4 +154,7 @@ def carregar_config_banco(env: Mapping[str, str] | None = None) -> ConfigBanco:
         nome_teste=nome_teste,
         usuario_bi=usuario_bi,
         senha_bi=_obrigatoria(env, "ALMOX_BI_PASSWORD"),
+        nome_app=nome_app,
+        usuario_app=usuario_app,
+        senha_app=_obrigatoria(env, "ALMOX_APP_PASSWORD"),
     )
