@@ -8,20 +8,15 @@ import psycopg
 import pytest
 from psycopg import errors
 
+from almox.banco import Conexao, conectar
 from almox.config import ConfigBanco
 
-from .apoio import Conexao, conectar
+from .apoio import valor
 
 pytestmark = pytest.mark.integracao
 
 # Banco do Projeto 1, que divide o mesmo container.
 BANCO_VIZINHO = "vendas_honda"
-
-
-def valor(con: Conexao, sql: str) -> object:
-    linha = con.execute(sql).fetchone()
-    assert linha is not None
-    return linha[0]
 
 
 def test_conecta_como_usuario_do_projeto_no_banco_do_projeto(
