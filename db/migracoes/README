@@ -1,0 +1,11 @@
+Migrações do banco `almoxarifado` (Alembic, SQL escrito à mão, sem autogenerate).
+
+Criar uma migração (número sequencial como id, para o arquivo ficar legível):
+    alembic revision --rev-id 0002 -m "descricao_curta"
+
+Aplicar / ver o estado / desfazer a última:
+    alembic upgrade head
+    alembic current
+    alembic downgrade -1
+
+Nunca editar uma migração já aplicada: crie uma nova.

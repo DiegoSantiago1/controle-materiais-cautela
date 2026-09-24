@@ -6,6 +6,10 @@ CLAUDE.md
 .venv/
 __pycache__/
 *.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
 
 # Dados brutos e reais: nunca versionar (confidencialidade e LGPD)
 data/raw/

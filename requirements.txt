@@ -1,0 +1,8 @@
+# Dependências para rodar o projeto (banco, migrations, carga).
+# Pandas e NumPy entram quando o gerador de dados for implementado (T1.5).
+alembic==1.20.0
+SQLAlchemy==2.0.54
+psycopg[binary]==3.3.6
+python-dotenv==1.2.3
+# O próprio projeto (pacote almox em src/), em modo editável.
+-e .
