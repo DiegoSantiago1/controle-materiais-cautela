@@ -60,7 +60,7 @@ def test_saldo_nunca_fica_negativo(dados: Dataset) -> None:
 
 
 def test_estado_final_reconstruivel(dados: Dataset) -> None:
-    estados = estado_final(dados)
+    estados = estado_final(dados.eventos)
     assert set(estados) == {u.ref for u in dados.unidades}
     for estado in estados.values():
         assert (estado.status == "CAUTELADA") == (estado.detentor is not None)
@@ -122,8 +122,8 @@ def test_p3_eletricas_atrasam_na_manutencao(dados: Dataset) -> None:
 
 def test_p4_cautelas_de_transferidos_viram_nao_localizadas(dados: Dataset) -> None:
     pessoas = {p.matricula: p for p in dados.pessoas}
-    estados = estado_final(dados)
-    inventario = date.fromisoformat(cat.INVENTARIO_ANUAL)
+    estados = estado_final(dados.eventos)
+    inventario = dados.inicio + timedelta(days=cat.INVENTARIO_ANUAL)
     sem_devolucao = {c.unidade: c for c in cautelas(dados) if c.devolucao is None}
     casos = []
     for ref, estado in estados.items():
@@ -334,3 +334,56 @@ def test_linha_de_comando_recusa_data_futura_ou_invalida() -> None:
     for data in ("2999-01-01", "31/08/2026"):
         with pytest.raises(SystemExit):
             cli.main(["--ate", data])
+
+
+# ================================================================== outras datas-âncora
+@pytest.mark.parametrize("ancora", ["2026-03-31", "2026-06-30", "2025-12-31"])
+def test_qualquer_ancora_gera_um_ano_coerente(ancora: str) -> None:
+    d = gerar(7, ancora)
+    limite = datetime.combine(d.fim, time(23, 59, 59), tzinfo=cat.FUSO)
+    assert all(e.ocorrida_em <= limite for e in d.eventos)
+    perfil = {u.login: u.perfil for u in d.usuarios}
+    for e in d.eventos:
+        if e.operacao in ("alterar_status", "entrada_unidade", "entrada_consumo"):
+            assert perfil[e.usuario] in ("ADMINISTRADOR", "ESTOQUISTA"), e
+    estado_final(d.eventos)  # reconstruível sem erro
+
+
+def test_ancora_em_29_de_fevereiro() -> None:
+    d = gerar(7, "2028-02-29")
+    assert (d.inicio, d.fim) == (date(2027, 3, 1), date(2028, 2, 29))
+
+
+def test_datas_relativas_caem_nas_datas_documentadas_na_ancora_padrao() -> None:
+    """Na âncora padrão, os deslocamentos do catálogo dão exatamente as datas que os
+    comentários do catálogo documentam (e que os dados oficiais usam)."""
+    inicio = date(2025, 9, 1)
+
+    def dia(deslocamento: int) -> date:
+        return inicio + timedelta(days=deslocamento)
+
+    assert dia(cat.INVENTARIO_ANUAL) == date(2026, 6, 15)
+    assert dia(cat.TOMBAMENTO[0]) == date(2026, 8, 12)
+    assert dia(cat.TRANSFERENCIA_SEM_PENDENCIA) == date(2026, 4, 15)
+    assert [dia(a[0]) for a in cat.AQUISICOES] == [date(2025, 11, 10)] + [date(2026, 7, 20)] * 3
+    assert [dia(t[1]) for t in cat.TRANSFERIDOS_COM_MATERIAL] == [
+        date(2025, 12, 4),
+        date(2026, 1, 20),
+        date(2026, 3, 9),
+    ]
+    assert [dia(c) for c in cat.CHEGADAS_NO_PERIODO] == [
+        date(2025, 11, 3),
+        date(2026, 1, 12),
+        date(2026, 3, 2),
+        date(2026, 5, 4),
+    ]
+    assert [dia(i) for i in cat.INVENTARIOS_CONSUMO] == [
+        date(2025, 11, 28),
+        date(2026, 2, 27),
+        date(2026, 5, 29),
+        date(2026, 8, 28),
+    ]
+    todas = [dia(cat.INVENTARIO_ANUAL), dia(cat.TOMBAMENTO[0])] + [
+        dia(c) for c in cat.CHEGADAS_NO_PERIODO + cat.INVENTARIOS_CONSUMO
+    ]
+    assert all(d.weekday() < 5 for d in todas)  # já são dias úteis: nada é deslocado

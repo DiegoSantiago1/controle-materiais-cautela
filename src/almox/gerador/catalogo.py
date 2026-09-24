@@ -189,17 +189,22 @@ OBSERVACOES_AVARIA = [
     "Cabo de alimentação danificado",
 ]
 
-# Aquisições no período: (data, código, quantidade, com BMP).
+# Datas dos acontecimentos pontuais: em DIAS DESDE O INÍCIO do período (e não datas
+# fixas), para que qualquer data-âncora gere um ano coerente. Se o dia cair num fim de
+# semana, o acontecimento passa para o próximo dia útil. Entre parênteses, a data que
+# resulta com a âncora padrão (período de 01/09/2025 a 31/08/2026).
+
+# Aquisições no período: (dia, código, quantidade, com BMP).
 AQUISICOES = [
-    ("2025-11-10", "FER-0001", 2, True),
-    ("2026-07-20", "FER-0001", 3, False),
-    ("2026-07-20", "FER-0002", 3, False),
-    ("2026-07-20", "MED-0001", 2, False),
+    (70, "FER-0001", 2, True),  # (10/11/2025)
+    (322, "FER-0001", 3, False),  # (20/07/2026) chegam sem BMP
+    (322, "FER-0002", 3, False),
+    (322, "MED-0001", 2, False),
 ]
-TOMBAMENTO = ("2026-08-12", 5)  # data e quantas das unidades sem BMP recebem número
+TOMBAMENTO = (345, 5)  # (12/08/2026) dia e quantas das unidades sem BMP recebem número
 
 # Patrimônio fixo: baixas e itens não encontrados no inventário anual.
-INVENTARIO_ANUAL = "2026-06-15"
+INVENTARIO_ANUAL = 287  # (15/06/2026)
 FIXOS_PARA_BAIXA = [("MOB-0004", 3), ("MOB-0001", 1)]  # viram BAIXA_PENDENTE
 FIXOS_BAIXADOS = 2  # destes, quantos chegam a BAIXADA no período
 FIXOS_NAO_ENCONTRADOS = [("MOB-0004", 1)]
@@ -217,10 +222,11 @@ QTD_PERFIS = {"reincidente": 4, "ocasional": 8}  # o restante é pontual
 # P3: na Manutenção, ferramentas elétricas atrasam com esta probabilidade mínima.
 PROB_ATRASO_ELETRICA_MANUT = 0.45
 # P4: transferidos que saem com material cautelado e nunca devolvem.
-TRANSFERIDOS_COM_MATERIAL = [("ILU-0001", "2025-12-04"), ("MED-0001", "2026-01-20"),
-                             ("INF-0001", "2026-03-09")]  # fmt: skip
-TRANSFERIDOS_SEM_PENDENCIA = 1
-CHEGADAS_NO_PERIODO = ["2025-11-03", "2026-01-12", "2026-03-02", "2026-05-04"]
+# (código, dia da cautela): 04/12/2025, 20/01/2026 e 09/03/2026 na âncora padrão; todas
+# a mais de 60 dias do inventário anual.
+TRANSFERIDOS_COM_MATERIAL = [("ILU-0001", 94), ("MED-0001", 141), ("INF-0001", 189)]
+TRANSFERENCIA_SEM_PENDENCIA = 226  # (15/04/2026)
+CHEGADAS_NO_PERIODO = [63, 133, 182, 245]  # (03/11/2025, 12/01, 02/03 e 04/05/2026)
 
 USUARIOS = [  # (perfil, setor da pessoa)
     ("ADMINISTRADOR", "ADM"),
@@ -344,7 +350,7 @@ DIAS_COBERTURA_MAXIMO = 30  # máximo = mínimo + um mês de demanda
 DIAS_COBERTURA_MAL_CALIBRADO = 60  # lotes maiores: menos ciclos, mas falta em quase todos
 
 # Inventário trimestral do consumo: chance de achar diferença em cada item.
-INVENTARIOS_CONSUMO = ["2025-11-28", "2026-02-27", "2026-05-29", "2026-08-28"]
+INVENTARIOS_CONSUMO = [88, 179, 270, 361]  # (28/11/2025, 27/02, 29/05 e 28/08/2026)
 PROB_DIFERENCA_INVENTARIO = 0.35
 
 

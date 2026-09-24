@@ -122,7 +122,7 @@ class Simulacao:
         self.rng = np.random.default_rng(semente)
         self.semente = semente
         self.fim = ancora
-        self.inicio = date(ancora.year - 1, ancora.month, ancora.day) + timedelta(days=1)
+        self.inicio = inicio_do_periodo(ancora)
         self.limite = datetime.combine(ancora, time(23, 59, 59), tzinfo=cat.FUSO)
         self.tipos = {t.codigo: t for t in cat.SERIAIS}
         self.eventos: list[Evento] = []
@@ -146,6 +146,14 @@ class Simulacao:
     @staticmethod
     def _util(dia: date) -> bool:
         return dia.weekday() < 5
+
+    def _dia_do_periodo(self, deslocamento: int) -> date | None:
+        """Dia útil `deslocamento` dias após o início (fim de semana passa para segunda).
+        None se cair depois do fim do período: o acontecimento não entra neste ano."""
+        dia = self.inicio + timedelta(days=deslocamento)
+        while not self._util(dia):
+            dia += timedelta(days=1)
+        return dia if dia <= self.fim else None
 
     def _sortear_dias(self, dias: list[date], quantidade: int) -> list[date]:
         indices = sorted(self.rng.choice(len(dias), quantidade, replace=False))
@@ -222,8 +230,10 @@ class Simulacao:
 
         # Chegadas durante o período.
         chegam = [comuns[int(i)] for i in self.rng.choice(len(comuns), 4, replace=False)]
-        for pessoa, dia in zip(chegam, cat.CHEGADAS_NO_PERIODO, strict=True):
-            pessoa.data_entrada = date.fromisoformat(dia)
+        for pessoa, deslocamento in zip(chegam, cat.CHEGADAS_NO_PERIODO, strict=True):
+            chegada = self._dia_do_periodo(deslocamento)
+            if chegada is not None:
+                pessoa.data_entrada = chegada
 
         # P2: 4 reincidentes entre quem usa rádio todo dia (SEG/OPER); 8 ocasionais.
         antigos = [p for p in comuns if p not in chegam]
@@ -320,14 +330,18 @@ class Simulacao:
     def aquisicoes_do_periodo(self) -> None:
         """Compras no período; parte chega sem BMP e só depois é tombada."""
         sem_bmp: list[Unidade] = []
-        for dia_texto, codigo, quantidade, com_bmp in cat.AQUISICOES:
-            lote = self.incorporar(
-                self.tipos[codigo], quantidade, date.fromisoformat(dia_texto), com_bmp
-            )
+        for deslocamento, codigo, quantidade, com_bmp in cat.AQUISICOES:
+            dia = self._dia_do_periodo(deslocamento)
+            if dia is None:
+                continue
+            lote = self.incorporar(self.tipos[codigo], quantidade, dia, com_bmp)
             if not com_bmp:
                 sem_bmp += lote
-        dia_texto, quantidade = cat.TOMBAMENTO
-        instante = self._instante(date.fromisoformat(dia_texto), 14)
+        deslocamento, quantidade = cat.TOMBAMENTO
+        dia_tombamento = self._dia_do_periodo(deslocamento)
+        if dia_tombamento is None:
+            return  # as unidades sem BMP continuam aguardando na data-âncora
+        instante = self._instante(dia_tombamento, 14)
         for unidade in sem_bmp[:quantidade]:
             (unidade.bmp,) = self._bmps_consecutivos(1)
             unidade.ocupada_ate = instante
@@ -349,14 +363,17 @@ class Simulacao:
                 do_tipo[int(i)] for i in self.rng.choice(len(do_tipo), quantidade, replace=False)
             ]
         for i, unidade in enumerate(para_baixa):
-            dia = self.inicio + timedelta(days=self._inteiro(30, 250))
-            while not self._util(dia):
-                dia += timedelta(days=1)
+            dia = self._dia_do_periodo(self._inteiro(30, 250))
+            if dia is None:
+                continue
             instante = self._instante(dia, 14)
             self._mudar_status(unidade, "BAIXA_PENDENTE", instante, "Item danificado sem conserto")
             if i < cat.FIXOS_BAIXADOS:
                 self._baixar_depois(unidade, instante)
-        inventario = self._instante(date.fromisoformat(cat.INVENTARIO_ANUAL), 11)
+        dia_inventario = self._dia_do_periodo(cat.INVENTARIO_ANUAL)
+        if dia_inventario is None:
+            return
+        inventario = self._instante(dia_inventario, 11)
         for codigo, quantidade in cat.FIXOS_NAO_ENCONTRADOS:
             livres = [u for u in self.unidades if u.codigo == codigo and u not in para_baixa]
             for unidade in livres[:quantidade]:
@@ -622,10 +639,16 @@ class Simulacao:
                     self.nao_atendida.append((dia, codigo, 1))
 
     def transferencias(self, dia: date) -> None:
-        """P4: saem da unidade levando material cautelado, que o inventário não localiza."""
-        inventario = self._instante(date.fromisoformat(cat.INVENTARIO_ANUAL), 10)
-        for codigo, dia_texto in cat.TRANSFERIDOS_COM_MATERIAL:
-            if date.fromisoformat(dia_texto) != dia:
+        """P4: saem da unidade levando material cautelado, que o inventário não localiza.
+
+        Só acontece se o inventário anual couber no período (senão a cautela ficaria
+        aberta sem nunca ser conferida, o que não é o padrão P4)."""
+        dia_inventario = self._dia_do_periodo(cat.INVENTARIO_ANUAL)
+        if dia_inventario is None:
+            return
+        inventario = self._instante(dia_inventario, 10)
+        for codigo, deslocamento in cat.TRANSFERIDOS_COM_MATERIAL:
+            if self._dia_do_periodo(deslocamento) != dia:
                 continue
             tipo = self.tipos[codigo]
             usuarios = {u.matricula for u in self.usuarios}
@@ -645,7 +668,7 @@ class Simulacao:
                 inventario,
                 "Inventário anual: não localizada; estava cautelada a militar já transferido",
             )
-        if dia == date(self.fim.year, 4, 15):  # uma transferência sem pendência
+        if dia == self._dia_do_periodo(cat.TRANSFERENCIA_SEM_PENDENCIA):
             usuarios = {u.matricula for u in self.usuarios}
             candidatas = [
                 p
@@ -720,7 +743,7 @@ class Simulacao:
         corrigir_hoje = dia in self.dias_estorno_consumo
         for instante, item in sorted(pedidos, key=lambda p: (p[0], p[1].codigo)):
             corrigir_hoje = self._atender(dia, instante, item, corrigir_hoje) and corrigir_hoje
-        if dia.isoformat() in cat.INVENTARIOS_CONSUMO:
+        if dia in {self._dia_do_periodo(d) for d in cat.INVENTARIOS_CONSUMO}:
             self._inventario(dia)
         self._pedir_compras(dia)
 
@@ -865,6 +888,18 @@ class Simulacao:
 
 
 _SEM_ACENTO = str.maketrans("áàâãéêíóôõúç", "aaaaeeiooouc")
+
+
+def inicio_do_periodo(ancora: date) -> date:
+    """Primeiro dia do período de 12 meses que termina na âncora.
+
+    29/02 como âncora: o "mesmo dia" do ano anterior não existe; usa-se 28/02.
+    """
+    try:
+        um_ano_antes = ancora.replace(year=ancora.year - 1)
+    except ValueError:
+        um_ano_antes = ancora.replace(year=ancora.year - 1, day=28)
+    return um_ano_antes + timedelta(days=1)
 
 
 def gerar(semente: int = cat.SEMENTE_PADRAO, ancora: str = cat.ANCORA_PADRAO) -> Dataset:

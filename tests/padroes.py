@@ -76,12 +76,16 @@ def saldo_diario(d: Dataset) -> dict[str, dict[date, int]]:
             assert e.quantidade is not None
             variacoes[e.material].append((e.ocorrida_em, e.quantidade, 0))  # contagem absoluta
     por_seq = {e.seq: e for e in d.eventos}
+    sinal_do_estorno = {"retirada_consumo": +1, "entrada_consumo": -1}
     for e in d.eventos:
         if e.operacao == "estorno" and e.estorno_de is not None:
             original = por_seq[e.estorno_de]
-            if original.operacao == "retirada_consumo":
+            if original.operacao in sinal_do_estorno:  # desfaz a original
                 assert original.quantidade is not None
-                variacoes[original.material].append((e.ocorrida_em, None, original.quantidade))
+                delta = sinal_do_estorno[original.operacao] * original.quantidade
+                variacoes[original.material].append((e.ocorrida_em, None, delta))
+            elif original.operacao == "ajuste_consumo":
+                raise NotImplementedError("estorno de ajuste não é gerado nem medido aqui")
     resultado: dict[str, dict[date, int]] = {}
     dias = [d.inicio + timedelta(days=i) for i in range((d.fim - d.inicio).days + 1)]
     for codigo, lista in variacoes.items():
