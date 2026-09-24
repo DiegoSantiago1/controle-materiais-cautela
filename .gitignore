@@ -1,0 +1,17 @@
+# Contexto pessoal e de carreira (não vai para o GitHub)
+CLAUDE.md
+
+# Segredos e ambiente
+.env
+.venv/
+__pycache__/
+*.pyc
+
+# Dados brutos e reais: nunca versionar (confidencialidade e LGPD)
+data/raw/
+original/
+
+# Notebooks e ferramentas
+.ipynb_checkpoints/
+node_modules/
+.DS_Store
