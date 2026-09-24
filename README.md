@@ -35,6 +35,8 @@ O sistema e **todos os dados são 100% fictícios**, gerados em Python. Nenhuma 
 
 **A4 em uma frase:** calculando o ponto de reposição só pelo histórico (demanda nos dias com estoque, prazo real de cada compra), a análise acha os 3 mínimos mal calibrados (o do toner é 7 vezes menor que o necessário: 56 dias sem toner no ano), o fornecedor lento (38 dias contra 13) e os 3 excessos, acertando os 24 materiais aqui e em quatro conjuntos nunca vistos.
 
+**Power BI:** o banco entrega um modelo estrela pronto (schema `bi`) e um usuário somente leitura para a conexão. Passo a passo, relacionamentos e medidas DAX explicadas em [docs/POWERBI.md](docs/POWERBI.md).
+
 Os notebooks são salvos já executados. Para reexecutar: `jupyter nbconvert --to notebook --execute --inplace notebooks/01_conferencia.ipynb` (com o banco carregado).
 
 ## Tecnologias previstas
@@ -51,7 +53,7 @@ python -m venv .venv
 .venv\Scripts\activate            # Windows (no Linux/macOS: source .venv/bin/activate)
 pip install -r requirements-dev.txt
 
-# 2. Configuração: copie o modelo e troque a senha
+# 2. Configuração: copie o modelo e troque as duas senhas (dono do banco e leitura do BI)
 copy .env.example .env            # Linux/macOS: cp .env.example .env
 
 # 3. Cria o usuário e o banco do projeto no container (pode rodar de novo sem problema)

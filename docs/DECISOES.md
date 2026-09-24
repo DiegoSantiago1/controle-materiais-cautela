@@ -143,6 +143,14 @@ aplicada sobre a demanda do mês de pico, deixou a maioria dos bem calibrados se
 
 **Bug que a análise revelou na carga.** A view de prazo voltou vazia: a carga não repassava a observação das entradas (onde está a data do pedido). Corrigido, com um teste de fidelidade campo a campo entre o CSV e o banco, comprovado nos dois sentidos (falha sem a correção, passa com ela).
 
+## D18. Power BI com menor privilégio
+
+**Decisão.** O Power BI conecta com um usuário só de leitura (`almox_bi`, membro do grupo `almox_leitura`), e não com o dono do banco. O grupo lê os schemas `bi` (modelo estrela: dimensões de calendário, material, pessoa e setor; fatos de movimentação, cautela e consumo diário), `analise` e `dq`. Não lê `core` nem `staging` e não grava nada (testado: 11 tentativas recusadas com 42501).
+
+**A armadilha que apareceu.** Views rodam com os direitos do dono, mas as funções chamadas dentro delas rodam com os de quem consulta. `analise.momento_referencia()` falhou para o BI. Solução: ela passou a `SECURITY DEFINER` com `search_path` fixo (devolve um único número), e só `core.data_local()` (conta de fuso) foi liberada ao grupo. De quebra, o `EXECUTE` padrão do PUBLIC foi retirado de todas as funções do `core`, inclusive das futuras: as funções de escrita ficam só com o dono.
+
+**Caso-limite.** Sem nenhuma movimentação, a data de referência era NULL e todas as views com período ficavam vazias sem explicação. Agora é "última movimentação ou agora".
+
 ## D10. Modelagem
 
 - **Categoria e subcategoria em duas tabelas**, e não uma tabela autorreferenciada: a profundidade é sempre dois níveis, e duas tabelas garantem isso sem truques.
