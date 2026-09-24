@@ -196,7 +196,7 @@ As horas de cada tarefa abaixo são de implementação. O total de cada fase já
 | T1.9 | Planilha suja e gabarito (P12–P16) | 4 | Taxas observadas batem com a configuração |
 | T1.10 | Testes dos padrões P1–P16 | 3 | Todos passam |
 
-### Fase 2 — Análise (~74 h com revisão)
+### Fase 2 — Análise (~74 h com revisão) — concluída em 24/09/2026 (falta o relatório Power BI, montado pelo Diego)
 
 Teto de horas por análise; se estourar, o escopo é revisto.
 
@@ -210,7 +210,7 @@ Teto de horas por análise; se estourar, o escopo é revisto.
 | A4 | Consumo e ruptura: ponto de reposição com NumPy × mínimo cadastrado | 10 | **Concluída**: os 3 mínimos mal calibrados, o fornecedor lento e os excessos aparecem pela análise (24/24, e 24/24 em 4 sementes fora da amostra); views na migração 0010, notebook `04_consumo` (ver D17) |
 | V1 | Views para o Power BI | 3 | **Concluída**: schema `bi` em estrela + usuário somente leitura (grupo `almox_leitura`), guia em `docs/POWERBI.md` (ver D18) |
 | PB | Relatório Power BI | 10 | Uma página por pergunta de negócio |
-| R1 | README de case e prints | 5 | Toda afirmação foi conferida de novo |
+| R1 | README de case e prints | 5 | **Concluída**: README como estudo de caso, gráficos em `docs/img/` extraídos dos notebooks, números conferidos contra as saídas |
 
 ### Fases 3 e 4 — Aplicação (depois da Fase 2 publicada)
 

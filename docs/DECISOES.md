@@ -94,7 +94,7 @@ aplicada sobre a demanda do mês de pico, deixou a maioria dos bem calibrados se
 
 **Por quê.** A regra fica perto dos dados e é reaproveitável (o Power BI e a futura API leem a mesma view); o Pandas fica com o que ele faz melhor (avaliação, tabelas e gráficos).
 
-**Como evitei ajustar as regras aos dados.** 100% de acerto na base usada para construir as regras não prova nada. A view foi avaliada em sete sementes que nunca tinha visto: 2 erros em ~2.900, ambos o mesmo caso-limite (texto quebrado pela extração combinado com outro erro na mesma palavra), deixado documentado em vez de remendado. A avaliação fora da amostra revelou três defeitos reais, corrigidos na regra:
+**Como evitei ajustar as regras aos dados.** 100% de acerto na base usada para construir as regras não prova nada. A view foi avaliada em sete sementes que nunca tinha visto (1.750 erros injetados): 2 não detectados e 1 falso positivo, todos o mesmo caso-limite (texto quebrado pela extração combinado com outro erro na mesma palavra), deixado documentado em vez de remendado. A avaliação fora da amostra revelou três defeitos reais, corrigidos na regra:
 - abreviação expandida sem o ponto (`'2 port as'` virava "portátil");
 - regras de nome exclusivas entre si (uma linha pode ter formatação diferente **e** digitação);
 - BMP vizinho escolhido só pela distância. Os BMPs de um lote são consecutivos, então vários candidatos ficam a 1 ou 2 dígitos. O número de série desempata, mas só se o dono dela não estiver listado com o próprio BMP (senão a série foi copiada).
