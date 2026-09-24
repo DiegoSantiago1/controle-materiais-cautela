@@ -14,6 +14,10 @@ __pycache__/
 # Dados brutos e reais: nunca versionar (confidencialidade e LGPD)
 data/raw/
 original/
+# Dados sintéticos: reproduzíveis pelo gerador, não versionados. O manifesto (com os
+# hashes de cada arquivo) é versionado, para qualquer pessoa conferir a reprodução.
+data/gerado/*
+!data/gerado/manifesto.json
 # Documentos de referência (ex.: PDF de carga real) nunca entram, mesmo fora de data/raw/
 *.pdf
 

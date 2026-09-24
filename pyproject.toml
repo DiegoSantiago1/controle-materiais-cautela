@@ -34,6 +34,8 @@ select = [
 [tool.ruff.lint.per-file-ignores]
 # assert é o jeito normal de testar no pytest; senhas de teste são fictícias.
 "tests/**" = ["S101", "S105", "S106"]
+# Catálogo: tabelas de parâmetros, mais legíveis uma por linha.
+"src/almox/gerador/catalogo.py" = ["E501"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["almox"]
@@ -50,4 +52,5 @@ testpaths = ["tests"]
 addopts = "-ra --strict-markers"
 markers = [
     "integracao: precisa do Docker e do banco almoxarifado rodando",
+    "lento: leva mais de 10 s (carga completa); pule com -m 'not lento' no dia a dia",
 ]

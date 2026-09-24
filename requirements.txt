@@ -1,6 +1,6 @@
-# Dependências para rodar o projeto (banco, migrations, carga).
-# Pandas e NumPy entram quando o gerador de dados for implementado (T1.5).
+# Dependências para rodar o projeto (banco, migrations, gerador, carga).
 alembic==1.20.0
+numpy==2.5.3
 SQLAlchemy==2.0.54
 psycopg[binary]==3.3.6
 python-dotenv==1.2.3

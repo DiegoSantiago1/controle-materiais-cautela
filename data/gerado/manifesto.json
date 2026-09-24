@@ -1,0 +1,37 @@
+{
+ "semente": 42,
+ "inicio": "2025-09-01",
+ "ancora": "2026-08-31",
+ "contagens": {
+  "pessoas": 40,
+  "unidades": 384,
+  "tipos_de_material": 58,
+  "eventos": 15751,
+  "eventos_por_operacao": {
+   "ajuste_consumo": 36,
+   "alterar_status": 105,
+   "devolucao_unidade": 5979,
+   "entrada_consumo": 259,
+   "entrada_unidade": 384,
+   "estorno": 15,
+   "retirada_consumo": 2969,
+   "retirada_unidade": 6004
+  },
+  "linhas_planilha": 358,
+  "erros_injetados": 243
+ },
+ "sha256": {
+  "setores.csv": "40ee7ac8c4fa7c1a86d7e52444d8e922d557f1270c9f64014bb42a99077ecce1",
+  "locais.csv": "d9d79f3e0eff3ed63e00761b51f2e8cf6665892a781d2a953c8affa795f69e7c",
+  "categorias.csv": "ba2e64800eac24c93e2026b251c9d52c9967b420fed944dd55f75ab2b62dce46",
+  "materiais.csv": "a32f5b8a415fb2018b4acb46efe97bc4170d70ab9c819fc52cadb42dfcc020bb",
+  "pessoas.csv": "800285c811c5e38441d324170d760659aa27d37c39c2dafe77fabd60c638dd44",
+  "usuarios.csv": "ce252466027a05246d5bd81f95f1348e5aa6eeb4bac93266557a80b769b98b49",
+  "saldos.csv": "96c82a67129d0b51e6ba093246873a3bb17e9d73aa8cd0650ba5b4eb9fe11da5",
+  "eventos.csv": "de0744031c1a48889a9dbe64672eb44358bee4830e7e121f09a5aff393317d50",
+  "planilha_carga.csv": "8a5bfbcbc220c2d5fabc95e683139a5eabf28db47f5f9ccc6c3d1e9143d2fc11",
+  "gabarito_linha.csv": "5a002bc7fdb4e732fe31a555422e4eb034afee8a852fd5d4aec2e9855b595305",
+  "gabarito_erro.csv": "7486da088630f61a629ea3b8ed5385fb6e6c2c8b174e7299718d29f90f0cb633",
+  "gabarito_padroes.json": "a335676959f1cce71c982b6da4abd704f6888d797dbbdb650112123f53f312bc"
+ }
+}
