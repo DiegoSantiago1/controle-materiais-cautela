@@ -1,0 +1,5 @@
+# Finais de linha sempre LF no repositório (evita diffs de CRLF entre Windows e Linux).
+* text=auto eol=lf
+*.pdf binary
+*.png binary
+*.pbix binary

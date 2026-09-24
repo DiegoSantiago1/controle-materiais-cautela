@@ -8,6 +8,7 @@ ENV_VALIDO = {
     "ALMOX_DB_HOST": "localhost",
     "ALMOX_DB_PORT": "5432",
     "ALMOX_DB_NAME": "almoxarifado",
+    "ALMOX_DB_NAME_TESTE": "almoxarifado_teste",
     "ALMOX_DB_USER": "almox",
     "ALMOX_DB_PASSWORD": "senha_de_teste",
 }
@@ -73,10 +74,28 @@ def test_porta_invalida(porta: str) -> None:
         "a" * 64,  # acima do limite de 63 do PostgreSQL
     ],
 )
-@pytest.mark.parametrize("variavel", ["ALMOX_DB_NAME", "ALMOX_DB_USER"])
+@pytest.mark.parametrize("variavel", ["ALMOX_DB_NAME", "ALMOX_DB_NAME_TESTE", "ALMOX_DB_USER"])
 def test_identificador_hostil_e_recusado(variavel: str, nome: str) -> None:
     with pytest.raises(ConfigError, match=variavel):
         carregar_config_banco(env_com(**{variavel: nome}))
+
+
+def test_banco_de_teste_igual_ao_principal_e_recusado() -> None:
+    """Sem esta trava, rodar os testes apagaria o banco principal."""
+    with pytest.raises(ConfigError, match="não pode ser igual"):
+        carregar_config_banco(env_com(ALMOX_DB_NAME_TESTE="almoxarifado"))
+
+
+def test_do_banco_de_teste_troca_so_o_nome_do_banco() -> None:
+    config = carregar_config_banco(ENV_VALIDO)
+    teste = config.do_banco_de_teste()
+    assert teste.nome == "almoxarifado_teste"
+    assert (teste.host, teste.porta, teste.usuario, teste.senha) == (
+        config.host,
+        config.porta,
+        config.usuario,
+        config.senha,
+    )
 
 
 def test_identificador_no_limite_de_63_e_aceito() -> None:

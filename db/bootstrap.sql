@@ -1,11 +1,13 @@
 -- =====================================================================
--- Bootstrap: cria o usuário (role) e o banco deste projeto dentro do
+-- Bootstrap: cria o usuário (role) e os bancos deste projeto dentro do
 -- container PostgreSQL compartilhado com o Projeto 1.
+--   :banco       banco principal (dados do projeto)
+--   :banco_teste banco dos testes automatizados (apagado e recriado pelo pytest)
 --
 -- Roda como superusuário, uma vez (e pode rodar de novo sem quebrar nada).
--- Não use diretamente: o scripts/criar_banco.py lê o .env, valida os
--- valores e envia este arquivo ao psql com as variáveis :usuario, :senha
--- e :banco já definidas.
+-- Não use diretamente: o `python -m almox.bootstrap` lê o .env, valida os
+-- valores e envia este arquivo ao psql com as variáveis :usuario, :senha,
+-- :banco e :banco_teste já definidas.
 --
 -- Por que não é uma migração do Alembic: criar role e banco são operações
 -- do servidor inteiro (exigem superusuário) e CREATE DATABASE não roda
@@ -14,7 +16,8 @@
 --
 -- Cada comando é montado com format(): %I cita identificadores e %L cita
 -- literais (a senha), o que impede SQL injection pelas variáveis. O \gexec
--- executa o texto resultante; o WHERE NOT EXISTS torna tudo idempotente.
+-- executa cada linha resultante como um comando; o WHERE NOT EXISTS torna
+-- tudo idempotente.
 -- =====================================================================
 \set ON_ERROR_STOP on
 
@@ -32,20 +35,24 @@ SELECT format(
 )
 \gexec
 
--- 2. Banco do projeto, pertencente ao usuário do projeto.
-SELECT format('CREATE DATABASE %I OWNER %I ENCODING %L TEMPLATE template0', :'banco', :'usuario', 'UTF8')
-WHERE NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = :'banco')
+-- 2. Bancos do projeto (principal e de testes), pertencentes ao usuário do projeto.
+SELECT format('CREATE DATABASE %I OWNER %I ENCODING %L TEMPLATE template0', b.nome, :'usuario', 'UTF8')
+FROM unnest(ARRAY[:'banco', :'banco_teste']) AS b(nome)
+WHERE NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = b.nome)
 \gexec
 
-SELECT format('ALTER DATABASE %I OWNER TO %I', :'banco', :'usuario')
+SELECT format('ALTER DATABASE %I OWNER TO %I', b.nome, :'usuario')
+FROM unnest(ARRAY[:'banco', :'banco_teste']) AS b(nome)
 \gexec
 
--- 3. Fuso horário na origem (lição do Projeto 1): toda sessão neste banco
---    enxerga horários em America/Recife; as colunas serão TIMESTAMPTZ.
-SELECT format('ALTER DATABASE %I SET timezone TO %L', :'banco', 'America/Recife')
+-- 3. Fuso horário na origem (lição do Projeto 1): toda sessão nestes bancos
+--    enxerga horários em America/Recife; as colunas de data e hora são TIMESTAMPTZ.
+SELECT format('ALTER DATABASE %I SET timezone TO %L', b.nome, 'America/Recife')
+FROM unnest(ARRAY[:'banco', :'banco_teste']) AS b(nome)
 \gexec
 
 -- 4. Por padrão o PostgreSQL deixa QUALQUER role conectar em qualquer banco
 --    (privilégio CONNECT do PUBLIC). Aqui só o dono conecta.
-SELECT format('REVOKE ALL ON DATABASE %I FROM PUBLIC', :'banco')
+SELECT format('REVOKE ALL ON DATABASE %I FROM PUBLIC', b.nome)
+FROM unnest(ARRAY[:'banco', :'banco_teste']) AS b(nome)
 \gexec

@@ -22,6 +22,7 @@ from dotenv import load_dotenv
 
 from almox.config import (
     RAIZ_PROJETO,
+    ConfigBanco,
     ConfigError,
     carregar_config_banco,
     validar_identificador,
@@ -45,14 +46,16 @@ def citar_valor_psql(valor: str) -> str:
     return "'" + valor.replace("\\", "\\\\").replace("'", "''") + "'"
 
 
-def montar_entrada_psql(usuario: str, senha: str, banco: str, sql: str) -> str:
+def montar_entrada_psql(config: ConfigBanco, sql: str) -> str:
     """Texto enviado ao psql: define as variáveis e em seguida o bootstrap.sql."""
-    return (
-        f"\\set usuario {citar_valor_psql(usuario)}\n"
-        f"\\set senha {citar_valor_psql(senha)}\n"
-        f"\\set banco {citar_valor_psql(banco)}\n"
-        f"{sql}"
-    )
+    variaveis = {
+        "usuario": config.usuario,
+        "senha": config.senha,
+        "banco": config.nome,
+        "banco_teste": config.nome_teste,
+    }
+    definicoes = "".join(f"\\set {nome} {citar_valor_psql(v)}\n" for nome, v in variaveis.items())
+    return definicoes + sql
 
 
 def comando_psql(docker: str, container: str, superusuario: str) -> list[str]:
@@ -96,9 +99,7 @@ def main() -> int:
         banco = carregar_config_banco()
         container, superusuario = _config_docker(os.environ)
         docker = _docker()
-        entrada = montar_entrada_psql(
-            banco.usuario, banco.senha, banco.nome, ARQUIVO_SQL.read_text(encoding="utf-8")
-        )
+        entrada = montar_entrada_psql(banco, ARQUIVO_SQL.read_text(encoding="utf-8"))
     except ConfigError as erro:
         print(f"Erro de configuração: {erro}", file=sys.stderr)
         return 2
@@ -113,7 +114,8 @@ def main() -> int:
 
     # flush: sem ele a mensagem fica no buffer e aparece depois da saída do psql.
     print(
-        f"Criando/atualizando o usuário {banco.usuario!r} e o banco {banco.nome!r}...",
+        f"Criando/atualizando o usuário {banco.usuario!r} e os bancos "
+        f"{banco.nome!r} e {banco.nome_teste!r}...",
         flush=True,
     )
     resultado = subprocess.run(  # noqa: S603 (argumentos validados, sem shell)

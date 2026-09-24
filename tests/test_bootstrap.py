@@ -10,7 +10,7 @@ import subprocess
 import pytest
 
 from almox.bootstrap import citar_valor_psql, comando_psql, montar_entrada_psql
-from almox.config import ConfigError
+from almox.config import ConfigBanco, ConfigError
 
 VALORES_DIFICEIS = [
     "simples",
@@ -41,13 +41,22 @@ def test_citacao_recusa_quebra_de_linha_e_nulo(valor: str) -> None:
         citar_valor_psql(valor)
 
 
-def test_entrada_define_as_tres_variaveis_antes_do_sql() -> None:
-    entrada = montar_entrada_psql("almox", "s3nha", "almoxarifado", "SELECT 1;")
+def test_entrada_define_as_variaveis_antes_do_sql() -> None:
+    config = ConfigBanco(
+        host="127.0.0.1",
+        porta=5432,
+        nome="almoxarifado",
+        usuario="almox",
+        nome_teste="almoxarifado_teste",
+        senha="s3nha",
+    )
+    entrada = montar_entrada_psql(config, "SELECT 1;")
     linhas = entrada.splitlines()
-    assert linhas[:3] == [
+    assert linhas[:4] == [
         "\\set usuario 'almox'",
         "\\set senha 's3nha'",
         "\\set banco 'almoxarifado'",
+        "\\set banco_teste 'almoxarifado_teste'",
     ]
     assert entrada.endswith("SELECT 1;")
 
