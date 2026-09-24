@@ -1,0 +1,33 @@
+{
+  "name": "almox-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API da tela do equipamentista (Controle de Materiais e Cautela, dados fictícios): retirada e devolução pelas mesmas funções de regra do banco.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "lint": "biome check . ../web",
+    "format": "biome format --write . ../web",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test --test-concurrency=1 test/*.test.ts",
+    "verificar": "npm run lint && npm run typecheck && npm test",
+    "definir-senha": "tsx scripts/definir-senha.ts"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "express": "5.2.1",
+    "pg": "8.23.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@types/express": "5.0.6",
+    "@types/node": "26.6.2",
+    "@types/pg": "8.23.1",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  }
+}
