@@ -1,8 +1,8 @@
 # Controle de Materiais e Cautela
 
-**Análise de dados do controle de material de uma unidade logística (dados fictícios): carga patrimonial, cautelas, uso de equipamentos e estoque de consumo, com PostgreSQL, SQL analítico, Python (Pandas/NumPy) e Power BI.**
+**Análise de dados do controle de material de uma unidade logística (dados fictícios): carga patrimonial, cautelas, uso de equipamentos e estoque de consumo, com PostgreSQL, SQL analítico, Python (Pandas/NumPy) e Power BI. Mais uma tela de balcão, para celular, que registra retiradas e devoluções pelas mesmas regras do banco.**
 
-> Projeto 2 do meu portfólio de Dados, na sequência do [Painel de Vendas](https://github.com/DiegoSantiago1/analise-vendas-concessionaria). Fase de dados e análises concluída; o relatório Power BI e a aplicação (API + tela do equipamentista) são as próximas etapas.
+> Projeto 2 do meu portfólio de Dados, na sequência do [Painel de Vendas](https://github.com/DiegoSantiago1/analise-vendas-concessionaria). Dados, análises e aplicação concluídos; o relatório Power BI é a próxima etapa.
 
 ## O problema
 
@@ -60,6 +60,9 @@ flowchart LR
     AN --> NB["Notebooks<br/>Pandas / NumPy"]
     BI --> PBI["Power BI<br/>(usuário só leitura)"]
     AN --> PBI
+    C -->|"mesmos dados,<br/>banco próprio"| APP[("almoxarifado_app")]
+    TELA["Tela do equipamentista<br/>(celular)"] --> API["API Node/TypeScript"]
+    API -->|"só pelas funções<br/>de regra"| APP
 ```
 
 - **`core`:** cadastros, estado atual e um **histórico de movimentações imutável** (só INSERT; triggers bloqueiam UPDATE, DELETE e TRUNCATE; erro se corrige com estorno). Toda movimentação passa por uma **função PL/pgSQL** que confere o perfil, trava a linha (`SELECT ... FOR UPDATE`), valida a regra e grava tudo numa transação.
@@ -67,6 +70,26 @@ flowchart LR
 - **`analise`:** as quatro análises como views SQL (CTEs, window functions, *gaps and islands*, similaridade de trigramas, Levenshtein).
 - **`dq`:** qualidade de dados, só com o que constraints não conseguem impor (encadeamento do histórico via `LAG`, estado × histórico, etc.).
 - **`bi`:** modelo estrela para o Power BI, lido por um usuário **somente leitura** que não enxerga `core` nem `staging` ([guia](docs/POWERBI.md)).
+- **`app`:** login e sessões da tela do equipamentista (senha em `scrypt`, sessão guardada só como hash).
+
+## Aplicação: o balcão do equipamentista
+
+No balcão, quem entrega o material precisa registrar quem levou o quê em poucos toques e ver na hora o que está vencido. Hoje isso costuma ser caderno ou planilha, justamente de onde vêm os erros que a conferência (A1) e a análise de atrasos (A2) encontraram.
+
+<p align="center">
+  <img src="docs/img/app_cautelas_em_aberto.png" width="24%" alt="Cautelas em aberto, com as vencidas em destaque">
+  <img src="docs/img/app_nova_retirada.png" width="24%" alt="Nova retirada em três passos: material, quem recebe, confirmar">
+  <img src="docs/img/app_devolucao.png" width="24%" alt="Devolução com o estado do material; avaria exige observação">
+  <img src="docs/img/app_tema_escuro.png" width="24%" alt="Tema escuro">
+</p>
+
+- **Cautelas em aberto**, as vencidas primeiro, com filtro por material, BMP, pessoa ou setor.
+- **Nova retirada em três passos:** buscar o material (sem acento, por nome, BMP ou série), buscar quem recebe e confirmar. O prazo vem do cadastro do material.
+- **Devolução** com o estado do material: avariado ou inservível exige observação e manda a unidade para manutenção ou baixa.
+
+**A API não reescreve regra nenhuma.** Ela chama as mesmas funções do banco que a carga usa, e o usuário dela **não tem permissão de gravar em nenhuma tabela** do `core`: só executa as funções de retirada e devolução, que rodam com os direitos do dono (`SECURITY DEFINER`, D20). Se a API fosse comprometida, o histórico continuaria protegido pelo banco. Um perfil de consulta que tenta retirar recebe 403 **do banco**, não de um `if` na API.
+
+**Segurança testada** (D21): senha com `scrypt`, sessão em cookie `HttpOnly` + `SameSite=Strict` guardada só como hash, limite de tentativas de login, a mesma resposta (e o mesmo tempo) para login inexistente e senha errada, proteção contra CSRF (JSON obrigatório + conferência de origem), CSP sem script inline e nenhum dado inserido como HTML na tela. A aplicação usa um **banco próprio** (D19), para não mexer nos números das análises.
 
 ## Decisões técnicas (resumo)
 
@@ -81,7 +104,8 @@ As decisões, com contexto, alternativas e o que foi medido, estão em [docs/DEC
 
 ## Qualidade
 
-- **343 testes** (`pytest`): integridade do schema com entradas hostis, regras de movimentação, concorrência com COMMIT real, reprodutibilidade do gerador, os padrões P1 a P16, fidelidade campo a campo da carga, cada regra de qualidade (injetando a violação), cada análise e as permissões do Power BI.
+- **402 testes em Python** (`pytest`): integridade do schema com entradas hostis, regras de movimentação, concorrência com COMMIT real, reprodutibilidade do gerador, os padrões P1 a P16, fidelidade campo a campo da carga, cada regra de qualidade (injetando a violação), cada análise e as permissões do Power BI e da API.
+- **68 testes da API** (`node:test`, por HTTP, como o navegador): login e sessão, força bruta, pedidos hostis (ids falsos, JSON quebrado, caractere nulo, corpo gigante, injeção de SQL), CSRF, cabeçalhos de segurança, as regras chegando como status HTTP e 10 retiradas simultâneas da mesma unidade (passa exatamente uma).
 - Banco de testes separado, recriado pelas migrações a cada execução: sobe, desce e sobe de novo, o que também testa os *downgrades*.
 - `ruff` (lint, formatação e regras de segurança, inclusive nos notebooks) e `mypy --strict`.
 - **Reprodutível:** mesma semente e mesma data final geram arquivos byte a byte idênticos (SHA-256 no [manifesto](data/gerado/manifesto.json)).
@@ -93,9 +117,12 @@ As decisões, com contexto, alternativas e o que foi medido, estão em [docs/DEC
 | PostgreSQL 16 (Docker) | integridade no banco, funções de regra, views analíticas, extensões `pg_trgm`, `fuzzystrmatch`, `unaccent` |
 | SQL | CTEs, window functions (`LAG`, `LEAD`, somas acumuladas, `RANK`), *gaps and islands*, `LATERAL` |
 | Python, NumPy, Pandas | gerador de dados, intervalo de Wilson, ponto de reposição, avaliação contra o gabarito, notebooks |
-| Alembic | migrações versionadas com SQL escrito à mão (11 migrações) |
+| Alembic | migrações versionadas com SQL escrito à mão (12 migrações) |
 | Power BI | relatório sobre o modelo estrela (guia em `docs/POWERBI.md`) |
-| pytest, ruff, mypy | testes, lint e tipos |
+| Node 24, TypeScript, Express 5, `pg` | API da tela do equipamentista, com SQL escrito à mão |
+| HTML, CSS, JavaScript | tela mobile-first, sem framework |
+| pytest, ruff, mypy | testes, lint e tipos (Python) |
+| `node:test`, Biome, `tsc` | testes, lint e tipos (API e tela) |
 
 ## Como rodar
 
@@ -124,9 +151,28 @@ python -m almox.gerador
 python -m almox.carga --recriar
 ```
 
+### A tela do equipamentista
+
+Requisito extra: Node 24. Com os passos 1 a 4 feitos:
+
+```bash
+# 7. Banco da aplicação, com os mesmos dados fictícios (~1 min)
+python -m almox.carga --recriar --banco app
+
+# 8. Dependências da API e senha de um usuário (digitada, não aparece na tela)
+cd api
+npm install
+npm run definir-senha -- enzo.04      # perfil EQUIPAMENTISTA; heitor.09 é CONSULTA
+
+# 9. Sobe a API e a tela em http://127.0.0.1:3334
+npm start
+```
+
+Testes da API: `python -m almox.migracoes teste` (uma vez, deixa o banco de testes no schema atual) e depois `npm run verificar` (lint, tipos e testes).
+
 Os notebooks são salvos já executados. Para reexecutar um deles (com o banco carregado): `jupyter nbconvert --to notebook --execute --inplace notebooks/01_conferencia.ipynb`. Para rodar as checagens de qualidade: `SELECT dq.executar();` e depois `SELECT * FROM dq.vw_ultima_execucao;`.
 
-**Atenção:** como o banco fica no container do outro projeto, um `docker compose down -v` lá apaga também este banco (o `-v` remove o volume). Para recriar, repita os passos 3 a 6.
+**Atenção:** como os bancos ficam no container do outro projeto, um `docker compose down -v` lá apaga também estes (o `-v` remove o volume). Para recriar, repita os passos 3 a 8.
 
 ### Verificações
 
@@ -143,17 +189,19 @@ pytest -m "not integracao"        # só os testes que não usam o banco
 
 ```
 db/bootstrap.sql              usuários e bancos (superusuário, idempotente)
-db/migracoes/versions/        11 migrações: core, staging, análises, dq, bi
+db/migracoes/versions/        12 migrações: core, staging, análises, dq, bi, app
 src/almox/gerador/            gerador de dados sintéticos (catálogo, simulação, planilha)
 src/almox/carga.py            carga pelas funções de regra, com conferência cruzada
 src/almox/analise/            conferência, cautela, uso e consumo (usados pelos notebooks)
 notebooks/                    as quatro análises, executadas, com insights
-tests/                        343 testes
+tests/                        402 testes (Python)
+api/                          API Node/TypeScript e 68 testes (node:test)
+web/                          tela do equipamentista (HTML, CSS, JavaScript)
 docs/                         plano, decisões técnicas e guia do Power BI
 ```
 
 ## Limitações e próximos passos
 
 - **Relatório Power BI:** o modelo está pronto e documentado; a montagem é a próxima etapa.
-- **Aplicação:** API (Node/TypeScript) sobre as mesmas funções do banco e a tela do equipamentista para uso no celular, com um usuário de aplicação sem permissão de alterar o histórico.
+- **Aplicação:** cobre o balcão (retirada e devolução de material patrimonial). Entrada de material, consumo, estorno e cadastros continuam só pelas funções do banco, sem tela. O limite de tentativas de login fica na memória de um processo, e a API roda só em `127.0.0.1`, sem HTTPS (para publicar, entraria um proxy com TLS e o cookie `Secure`).
 - Os padrões dos dados foram plantados. As análises foram validadas por conseguirem reencontrá-los, o que mostra que o método funciona, mas não substitui dados reais.

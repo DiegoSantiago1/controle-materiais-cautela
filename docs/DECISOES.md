@@ -157,3 +157,37 @@ aplicada sobre a demanda do mês de pico, deixou a maioria dos bem calibrados se
 **A armadilha que apareceu.** Views rodam com os direitos do dono, mas as funções chamadas dentro delas rodam com os de quem consulta. `analise.momento_referencia()` falhou para o BI. Solução: ela passou a `SECURITY DEFINER` com `search_path` fixo (devolve um único número), e só `core.data_local()` (conta de fuso) foi liberada ao grupo. De quebra, o `EXECUTE` padrão do PUBLIC foi retirado de todas as funções do `core`, inclusive das futuras: as funções de escrita ficam só com o dono.
 
 **Caso-limite.** Sem nenhuma movimentação, a data de referência era NULL e todas as views com período ficavam vazias sem explicação. Agora é "última movimentação ou agora".
+
+## D19. Banco próprio para a aplicação
+
+**Decisão.** A tela do equipamentista usa o banco `almoxarifado_app`, carregado com os mesmos dados fictícios (`python -m almox.carga --recriar --banco app`), e não o banco das análises.
+
+**Por quê.** As análises usam como referência o instante da última movimentação (31/08/2026). Uma retirada feita hoje pela tela mudaria essa referência, o calendário do Power BI e os números dos notebooks (as 5.994 cautelas, os 56 dias sem toner). O banco das análises fica congelado e reproduzível; o da aplicação é o "sistema vivo". A configuração recusa um banco da aplicação com o mesmo nome do banco das análises ou do de testes, e o usuário da API nem tem permissão de conectar no banco das análises (testado).
+
+## D20. Escrita só pelas funções de regra (`SECURITY DEFINER`)
+
+**Decisão.** O usuário da API (grupo `almox_aplicacao`) não tem `INSERT`, `UPDATE` nem `DELETE` em nenhuma tabela do `core`. Ele executa só as duas funções que a tela usa (retirada e devolução), que passaram a `SECURITY DEFINER`: rodam com os direitos do dono do banco.
+
+**Por quê.** Com direitos de tabela, uma falha na API (injeção de SQL, rota esquecida, bug) poderia gravar direto no histórico e pular as regras. Assim, o único caminho para o histórico é a função, que confere perfil, trava a linha e valida a regra. O teste varre todas as tabelas do `core` (inclusive as futuras) e tenta 20 operações proibidas; duas mutações (tirar o `SECURITY DEFINER`; conceder um `INSERT` direto) são detectadas.
+
+**O cuidado que `SECURITY DEFINER` exige.** Uma função que roda como o dono pode ser desviada se resolver nomes pelo `search_path` de quem chama (a pessoa cria um objeto com o mesmo nome num schema seu). Por isso o `search_path` é fixo (`pg_catalog, pg_temp`) e as funções só usam nomes qualificados (`core.xxx`), o que foi conferido antes da mudança e é testado.
+
+**Limitação conhecida.** O banco confia no `p_executado_por` que a API envia (vem da sessão, nunca do corpo do pedido, e isso é testado). Com uma conexão compartilhada, o banco não tem como saber qual pessoa está do outro lado; quem autentica é a API.
+
+## D21. Login e sessão sem biblioteca externa
+
+**Decisão.** Senha com `scrypt` do módulo `crypto` do Node (N=2^17, r=8, p=1: parâmetros mínimos da OWASP), comparação em tempo constante e o mesmo tempo de resposta para login inexistente, senão o tempo revelaria quais logins existem (medido: cerca de 0,31 s nos dois casos; a primeira versão gerava o hash fictício na hora e o primeiro login inexistente levava 0,62 s, o que foi corrigido com um hash fixo). Sessão com token aleatório de 32 bytes em cookie `HttpOnly` e `SameSite=Strict`; o banco guarda só o SHA-256 do token. Limite de 5 falhas por login (e 20 por IP) em 15 minutos.
+
+**Por quê sem biblioteca.** O que se precisa (hash lento, token aleatório, cookie) já existe no Node, e cada dependência é código de terceiro rodando com acesso ao banco. `express` e `pg` são as únicas dependências de produção.
+
+**Contra CSRF**, três camadas: o cookie `SameSite=Strict`, a exigência de `Content-Type: application/json` (um formulário de outro site não consegue enviar isso sem o navegador pedir permissão) e a conferência do cabeçalho `Origin`. **Contra XSS**, duas: a tela nunca monta HTML com dados (só `textContent`) e a CSP não permite script inline.
+
+**Limitações conhecidas.** O limite de tentativas fica na memória de um processo (com várias instâncias, teria de ir para o banco ou um Redis). O cookie só ganha o atributo `Secure` com `ALMOX_API_COOKIE_SEGURO=sim`, que exige HTTPS; em `localhost` fica desligado.
+
+## D22. Tela em HTML, CSS e JavaScript puro
+
+**Decisão.** A tela é servida pela própria API (mesma origem, sem CORS), sem framework nem etapa de build, mobile-first. Verde é a cor de identidade; vermelho e âmbar ficam reservados para "vencida" e "vence logo", sempre acompanhados de texto.
+
+**Por quê.** São quatro telas simples. React entra nos projetos 4 e 5, onde a interface justifica. Aqui o aprendizado novo é segurança (D20, D21), e trocar de framework ao mesmo tempo diluiria o foco.
+
+**Verificação.** O fluxo completo (entrar, filtrar, retirar, devolver com avaria, sair, perfil de consulta, tema escuro, largura de celular e de desktop) foi percorrido num navegador real (Playwright, Chromium headless, 390×844), sem erros de console além do 401 esperado da senha errada. A verificação encontrou dois defeitos, corrigidos: a pergunta "quem sou eu?" respondia 401 a cada visita (agora `usuario: null`) e, no Express 5, o callback do `listen` recebe o erro de porta ocupada, que era ignorado (o servidor anunciava "no ar" e saía em silêncio).

@@ -212,6 +212,28 @@ Teto de horas por análise; se estourar, o escopo é revisto.
 | PB | Relatório Power BI | 10 | Uma página por pergunta de negócio |
 | R1 | README de case e prints | 5 | **Concluída**: README como estudo de caso, gráficos em `docs/img/` extraídos dos notebooks, números conferidos contra as saídas |
 
-### Fases 3 e 4 — Aplicação (depois da Fase 2 publicada)
+### Fases 3 e 4 — Aplicação — concluídas em 24/09/2026
 
-API Node/TypeScript com SQL escrito à mão, transações e `FOR UPDATE`; login com perfis Administrador e Equipamentista; tela mobile do equipamentista (retirada e devolução em poucos toques). Detalhadas quando a Fase 2 estiver publicada.
+O Diego liberou o início antes da publicação da Fase 2 (24/09/2026). Escopo enxuto: **a tela do equipamentista no balcão**, não um sistema completo. O painel de gestão é o Power BI.
+
+**O problema que a aplicação resolve:** no balcão, o equipamentista precisa registrar quem levou o quê em poucos toques, no celular, e ver na hora o que está vencido. Hoje isso é caderno ou planilha, que é exatamente de onde vêm os erros que a A1 e a A2 encontraram.
+
+**Decisões (detalhe em DECISOES, D19 a D22):**
+
+| Decisão | Escolha | Por quê |
+|---|---|---|
+| Stack | Node 24 + TypeScript + Express 5 + `pg`, SQL à mão; front em HTML/CSS/JS puro servido pela própria API | Mesma stack do Projeto 1: o aprendizado novo aqui é segurança (login, sessão, menor privilégio), não framework. React fica para os projetos 4 e 5 |
+| Banco | Banco próprio `almoxarifado_app`, carregado com os mesmos dados fictícios | As análises e o Power BI leem o banco congelado em 31/08/2026. Movimentações feitas pela aplicação mudariam a data de referência e os números dos notebooks |
+| Regras | A API chama as mesmas funções `core.registrar_*` | Regra num lugar só (D1); a API só valida o formato na borda e traduz os erros |
+| Permissões | Usuário da API (grupo `almox_aplicacao`) sem nenhum INSERT, UPDATE ou DELETE nas tabelas do `core`; as funções de escrita passam a `SECURITY DEFINER` | Mesmo com a API comprometida, o histórico só muda pelas regras |
+| Login | Senha com `scrypt` (módulo `crypto` do Node, sem dependência), sessão em cookie `HttpOnly` + `SameSite=Strict`, token guardado no banco só como hash SHA-256 | Vazamento do banco não entrega senhas nem sessões |
+| Front | Mobile-first, verde como cor principal, tema claro e escuro, CSP sem script inline, texto sempre por `textContent` | XSS bloqueado em duas camadas |
+
+**Telas:** entrar; cautelas em aberto (vencidas primeiro); nova retirada (buscar material → buscar pessoa → confirmar); devolução (estado BOM, AVARIADO ou INSERVÍVEL, observação obrigatória quando não está bom).
+
+| # | Tarefa | Pronto quando |
+|---|---|---|
+| P3.1 | Banco da aplicação, usuário da API, migração com `SECURITY DEFINER`, credenciais e sessões | **Concluída**: migração 0012; o usuário da API não grava em nenhuma tabela do `core` e movimenta pelas funções (D19, D20) |
+| P3.2 | API: sessão (entrar, sair, quem sou), busca de unidades e pessoas, cautelas em aberto, retirada, devolução | **Concluída**: 68 testes `node:test` por HTTP (D21) |
+| P4.1 | Tela do equipamentista | **Concluída**: fluxo completo verificado no Chromium headless, 390×844, claro e escuro (D22) |
+| P4.2 | README, decisões e checkpoint | **Concluída**: README com a seção da aplicação e os comandos conferidos |
