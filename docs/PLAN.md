@@ -33,6 +33,8 @@ O domínio vem da minha experiência em funções administrativas e de controle 
 | Volume | ~390 unidades patrimoniais, ~50 tipos de material, 40 pessoas, 12 meses, ~20 mil movimentações. |
 | Banco | PostgreSQL 16 em Docker, banco próprio `almoxarifado` e usuário próprio. |
 | Dashboard administrativo | Power BI, alimentado por views do banco. |
+| Qualidade de dados | Checagens automáticas de data quality entram na Fase 2 (análise de conferência). |
+| Fora do escopo | Pipeline ETL e Data Warehouse ficam para um projeto próprio de engenharia de dados, que poderá usar este banco como fonte. |
 
 ## 4. Modelo de dados
 
@@ -155,7 +157,18 @@ Um local concentra ~45% dos erros. As análises se conectam: as unidades não lo
 
 ## 6. Tarefas
 
-Cada tarefa segue o ciclo implementar → testar → explicar → commit.
+### Critério de pronto
+
+Uma tarefa só está pronta quando foi implementada, executada, testada (incluindo entradas inválidas e casos extremos, não só o caminho feliz), corrigida, testada de novo, revisada e integrada ao resto. O que não puder ser verificado é registrado como não verificado, com o motivo.
+
+- Ciclo por tarefa: planejar → implementar → testar → revisar → corrigir → testar de novo → documentar → commit pequeno (`feat:`, `fix:`, `test:`, `docs:`).
+- Antes de fechar uma fase: lint → verificação de tipos → testes, tudo passando.
+- Mudanças no banco só por migrations versionadas.
+- Soluções provisórias só marcadas como `TODO / TECHNICAL DEBT`, com a solução correta descrita.
+- Ao fim de cada fase, um checkpoint: implementado, testado, problemas encontrados e corrigidos, pendências.
+- Antes de encerrar o projeto: três revisões independentes (engenharia de software, QA e engenharia de dados).
+
+As horas de cada tarefa abaixo são de implementação. O total de cada fase já inclui ~30% para testes, revisão e correção.
 
 ### Fase 0 — Planejamento (~2 h)
 
@@ -165,11 +178,11 @@ Cada tarefa segue o ciclo implementar → testar → explicar → commit.
 | T0.2 | README com o status do projeto |
 | T0.3 | `data/raw/` fora do git |
 
-### Fase 1 — Dados (~33 h)
+### Fase 1 — Dados (~43 h com revisão)
 
 | # | Tarefa | h | Pronto quando |
 |---|---|---|---|
-| T1.1 | Banco `almoxarifado` e usuário próprio no container existente; fuso fixado; `.venv` e `requirements.txt` | 2 | Conecta pelo Python sem afetar o outro banco do container |
+| T1.1 | Banco `almoxarifado` e usuário próprio no container existente; fuso fixado; `.venv`, `requirements.txt`; ferramentas de qualidade (`ruff` para lint e formatação, `mypy` no código Python fora dos notebooks, `pytest`); ferramenta de migrations | 3 | Conecta pelo Python sem afetar o outro banco do container; lint, tipos e um teste vazio passam |
 | T1.2 | DDL do `core`: tabelas, FKs compostas, `CHECK`s, índice parcial, trigger de imutabilidade | 6 | Sobe do zero sem erro |
 | T1.3 | Testes do schema com `pytest`, em transação com `ROLLBACK` | 3 | Cada regra tem um teste que tenta quebrá-la |
 | T1.4 | Schema `staging` | 1 | Criado |
@@ -180,13 +193,14 @@ Cada tarefa segue o ciclo implementar → testar → explicar → commit.
 | T1.9 | Planilha suja e gabarito (P12–P16) | 4 | Taxas observadas batem com a configuração |
 | T1.10 | Testes dos padrões P1–P16 | 3 | Todos passam |
 
-### Fase 2 — Análise (~54 h)
+### Fase 2 — Análise (~74 h com revisão)
 
 Teto de horas por análise; se estourar, o escopo é revisto.
 
 | # | Tarefa | h | Pronto quando |
 |---|---|---|---|
 | A1 | Conferência: SQL no `staging` + notebook Pandas de limpeza, com precisão e revocação | 10 | Notebook roda do zero, com insights escritos |
+| DQ | Checagens de data quality em SQL (material sem código, código duplicado, saldo negativo, movimentação sem usuário ou sem material, quantidade inválida, data inválida ou futura, referência inexistente), com cada ocorrência registrada em uma tabela de resultados | 3 | Cada checagem tem um teste que injeta o problema e confirma que ele é detectado |
 | A2 | Cautela e atrasos: `LAG`/`LEAD`, ranking por pessoa e setor, unidades não localizadas | 8 | Consultas em `sql/analises.sql`, com `EXPLAIN` nas principais |
 | M1 | Publicação intermediária (schema, gerador, A1, A2, README parcial) | 3 | Repositório apresentável |
 | A3 | Uso e ociosidade: taxa de utilização, curva ABC, sobra e falta | 8 | Idem A2 |
