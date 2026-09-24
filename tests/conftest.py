@@ -111,6 +111,19 @@ def psql_superusuario() -> list[str]:
         pytest.fail(
             "Defina ALMOX_DOCKER_CONTAINER e ALMOX_DOCKER_SUPERUSER no .env.", pytrace=False
         )
-    return [docker, "exec", "-i", container,
-            "psql", "-X", "-A", "-t", "-v", "ON_ERROR_STOP=1",
-            "-U", superusuario, "-d", "postgres"]  # fmt: skip
+    return [
+        docker,
+        "exec",
+        "-i",
+        container,
+        "psql",
+        "-X",
+        "-A",
+        "-t",
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-U",
+        superusuario,
+        "-d",
+        "postgres",
+    ]

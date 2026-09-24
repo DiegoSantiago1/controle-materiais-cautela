@@ -61,9 +61,19 @@ def montar_entrada_psql(config: ConfigBanco, sql: str) -> str:
 def comando_psql(docker: str, container: str, superusuario: str) -> list[str]:
     """Linha de comando do psql no container. Não contém a senha."""
     return [
-        docker, "exec", "-i", container,
-        "psql", "-X", "-v", "ON_ERROR_STOP=1", "-U", superusuario, "-d", "postgres",
-    ]  # fmt: skip
+        docker,
+        "exec",
+        "-i",
+        container,
+        "psql",
+        "-X",
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-U",
+        superusuario,
+        "-d",
+        "postgres",
+    ]
 
 
 def _config_docker(env: Mapping[str, str]) -> tuple[str, str]:

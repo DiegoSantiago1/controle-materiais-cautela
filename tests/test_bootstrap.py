@@ -26,11 +26,14 @@ VALORES_DIFICEIS = [
 ]
 
 
-@pytest.mark.parametrize(("valor", "esperado"), [
-    ("abc", "'abc'"),
-    ("it's", "'it''s'"),
-    ("a\\b", "'a\\\\b'"),
-])  # fmt: skip
+@pytest.mark.parametrize(
+    ("valor", "esperado"),
+    [
+        ("abc", "'abc'"),
+        ("it's", "'it''s'"),
+        ("a\\b", "'a\\\\b'"),
+    ],
+)
 def test_citacao_escapa_aspa_e_barra(valor: str, esperado: str) -> None:
     assert citar_valor_psql(valor) == esperado
 
