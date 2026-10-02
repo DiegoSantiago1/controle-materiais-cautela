@@ -363,3 +363,22 @@ describe("própria senha", () => {
     assert.equal((await outra.pedir("GET", "/api/posse")).status, 401);
   });
 });
+
+describe("dados de acesso", () => {
+  test("lista de militares: login e perfil só para o administrador", async () => {
+    const comoEquip = await equip.pedir("GET", "/api/militares");
+    assert.equal(comoEquip.status, 200);
+    const militares = comoEquip.corpo.militares as {
+      login: string | null;
+      perfil: string | null;
+    }[];
+    assert.ok(militares.length > 0);
+    assert.ok(militares.every((m) => m.login === null && m.perfil === null));
+
+    const comoAdmin = await admin.pedir("GET", "/api/militares");
+    const comLogin = (comoAdmin.corpo.militares as { login: string | null }[]).filter(
+      (m) => m.login,
+    );
+    assert.ok(comLogin.length > 0);
+  });
+});

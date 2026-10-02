@@ -85,6 +85,9 @@ No balcão, quem entrega o material precisa registrar **quem levou o quê, quant
   <img src="docs/img/app_estoque.png" width="49%" alt="Estoque: total, disponível, em posse, manutenção, mínimo e o painel com cada unidade">
   <img src="docs/img/app_tema_escuro.png" width="49%" alt="Histórico no tema escuro, com o ciclo retirada, posse e devolução">
 </p>
+<p align="center">
+  <img src="docs/img/app_celular.png" width="28%" alt="No celular: as ações do balcão na barra inferior">
+</p>
 
 - **Militares identificados pelo nome de guerra** e pelo posto/graduação (S2 a CEL): "SGT SOUZA" é como o equipamentista procura no balcão.
 - **Nova retirada:** o militar, um ou mais materiais (por quantidade, e o banco escolhe as unidades, ou pelo BMP da etiqueta), o estado em que saíram (bom ou regular, com observação) e a finalidade. Tudo numa transação, com um **código de operação** que liga as unidades do mesmo atendimento; sai um comprovante com os BMPs e os prazos.

@@ -10,7 +10,7 @@ import { type Request, Router } from "express";
 import type pg from "pg";
 import { ErroHttp } from "../erros.ts";
 import * as v from "../validacao.ts";
-import { type Dependencias, idDaRota, SEM_ACENTO, uuid } from "./comum.ts";
+import { type Dependencias, idDaRota, SEM_ACENTO, usuario, uuid } from "./comum.ts";
 
 const TIPOS = ["ENTRADA", "RETIRADA", "DEVOLUCAO", "MUDANCA_STATUS", "AJUSTE", "ESTORNO"] as const;
 const POR_PAGINA = 50;
@@ -211,13 +211,21 @@ export function rotasDeConsulta(dep: Dependencias): Router {
     res.json({ pessoas: rows });
   });
 
-  /** Todos os militares (inclusive os que já saíram), com usuário e material em posse. */
+  /**
+   * Todos os militares (inclusive os que já saíram). Login e perfil de quem tem usuário só
+   * vão para o administrador: a lista de logins ajudaria a adivinhar senhas, e o login
+   * cuida de não revelar quais existem (D21).
+   */
   rotas.get("/militares", async (_req, res) => {
+    const admin = usuario(res).perfil === "ADMINISTRADOR";
     const { rows } = await pool.query(
       `SELECT p.id, p.posto_graduacao AS posto, pg.ordem AS posto_ordem, p.nome_guerra, p.nome,
               p.matricula, p.setor_id, s.sigla AS setor, p.data_entrada, p.data_saida,
               p.data_saida IS NULL OR p.data_saida > core.data_local(now()) AS na_unidade,
-              u.id AS usuario_id, u.login, u.perfil, u.ativo AS usuario_ativo,
+              CASE WHEN $1 THEN u.id END AS usuario_id,
+              CASE WHEN $1 THEN u.login END AS login,
+              CASE WHEN $1 THEN u.perfil END AS perfil,
+              CASE WHEN $1 THEN u.ativo END AS usuario_ativo,
               (SELECT count(*) FROM core.unidade_patrimonial x
                WHERE x.detentor_id = p.id AND x.status = 'CAUTELADA')::integer AS em_posse
        FROM core.pessoa p
@@ -225,6 +233,7 @@ export function rotasDeConsulta(dep: Dependencias): Router {
        JOIN core.posto_graduacao pg ON pg.sigla = p.posto_graduacao
        LEFT JOIN core.usuario u ON u.pessoa_id = p.id
        ORDER BY p.data_saida IS NOT NULL, pg.ordem DESC, lower(p.nome_guerra)`,
+      [admin],
     );
     res.json({ militares: rows });
   });
