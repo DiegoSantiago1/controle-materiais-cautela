@@ -158,7 +158,7 @@ aplicada sobre a demanda do mês de pico, deixou a maioria dos bem calibrados se
 
 **Caso-limite.** Sem nenhuma movimentação, a data de referência era NULL e todas as views com período ficavam vazias sem explicação. Agora é "última movimentação ou agora".
 
-## D19. Banco próprio para a aplicação
+## D19. Banco próprio para a aplicação (revista na D27: o Power BI operacional lê este banco)
 
 **Decisão.** A tela do equipamentista usa o banco `almoxarifado_app`, carregado com os mesmos dados fictícios (`python -m almox.carga --recriar --banco app`), e não o banco das análises.
 
@@ -172,7 +172,7 @@ aplicada sobre a demanda do mês de pico, deixou a maioria dos bem calibrados se
 
 **O cuidado que `SECURITY DEFINER` exige.** Uma função que roda como o dono pode ser desviada se resolver nomes pelo `search_path` de quem chama (a pessoa cria um objeto com o mesmo nome num schema seu). Por isso o `search_path` é fixo (`pg_catalog, pg_temp`) e as funções só usam nomes qualificados (`core.xxx`), o que foi conferido antes da mudança e é testado.
 
-**Limitação conhecida.** O banco confia no `p_executado_por` que a API envia (vem da sessão, nunca do corpo do pedido, e isso é testado). Com uma conexão compartilhada, o banco não tem como saber qual pessoa está do outro lado; quem autentica é a API.
+**Limitação conhecida.** O banco confia no `p_executado_por` que a API envia (vem da sessão, nunca do corpo do pedido, e isso é testado). Com uma conexão compartilhada, o banco não tem como saber qual pessoa está do outro lado; quem autentica é a API. **Resolvida na D24:** as funções da aplicação passaram a receber o hash do token da sessão.
 
 ## D21. Login e sessão sem biblioteca externa
 
@@ -191,3 +191,59 @@ aplicada sobre a demanda do mês de pico, deixou a maioria dos bem calibrados se
 **Por quê.** São quatro telas simples. React entra nos projetos 4 e 5, onde a interface justifica. Aqui o aprendizado novo é segurança (D20, D21), e trocar de framework ao mesmo tempo diluiria o foco.
 
 **Verificação.** O fluxo completo (entrar, filtrar, retirar, devolver com avaria, sair, perfil de consulta, tema escuro, largura de celular e de desktop) foi percorrido num navegador real (Playwright, Chromium headless, 390×844), sem erros de console além do 401 esperado da senha errada. A verificação encontrou dois defeitos, corrigidos: a pergunta "quem sou eu?" respondia 401 a cada visita (agora `usuario: null`) e, no Express 5, o callback do `listen` recebe o erro de porta ocupada, que era ignorado (o servidor anunciava "no ar" e saía em silêncio).
+
+## D23. Catálogo militar, militares novos e um mês de uso, só no banco da aplicação
+
+**Contexto.** O sistema precisava de material operacional (controle de distúrbios, formatura e cerimonial, paraquedismo, campanha, EPI, comunicação), de militares identificados por posto e nome de guerra e de movimento suficiente para as telas e o relatório operacional fazerem sentido.
+
+**Decisão.** Posto/graduação e nome de guerra entram no `core` (migração 0013), nos dois bancos; o gerador os sorteia com um gerador aleatório próprio, e os eventos ficam idênticos (testado: só o hash de `pessoas.csv` muda). O catálogo militar (76 materiais patrimoniais com 1.711 unidades e 4 de consumo), 24 militares apresentados em 01/09/2026 e a atividade de setembro (serviço de dia, treino de choque, desfile de 7 de Setembro, salto, campanha, EPI, manutenção e reposição) entram **só no banco da aplicação** (`almox.complemento` e `almox.atividade`).
+
+**Por quê.** O banco das análises continua congelado em 31/08/2026: notebooks, gabarito e números do README não mudam. A atividade é planejada em Python puro com semente fixa (testável sem banco, sempre o mesmo plano) e executada pelas mesmas funções de regra que a tela usa; recarregar o banco reproduz os mesmos números (418 retiradas, 410 devoluções, 25 avarias).
+
+**Postos.** A lista é a pedida pelo dono do projeto (S2, S1, CB, SGT, ST, TEN, CAP, MAJ, TEN-CEL, CEL), com siglas genéricas. "ST" e "SUBTEN" vieram os dois na lista e são o mesmo posto (subtenente); ficou "ST".
+
+**Sem armamento de fogo nem munição.** Tonfa, espadim e sabre entram a pedido, como material de controle de distúrbios e de cerimonial.
+
+## D24. O banco descobre quem está logado (funções `app.*` com o token da sessão)
+
+**Contexto.** A D20 registrava uma limitação: o banco confiava no `p_executado_por` que a API enviava. Com funções que criam usuários, trocam perfil e definem senha, isso deixa de bastar: com uma injeção de SQL na API, alguém chamaria a função passando o id de um administrador.
+
+**Decisão.** O usuário do banco da API executa **só** funções do schema `app` (retirar, devolver, entrada, cadastros, usuários, senha...). Cada uma recebe o **hash SHA-256 do token** da sessão, e `app._usuario()` descobre no banco quem está logado (sessão existente, não vencida, usuário ativo; senão ALM13 → 401). As funções do `core` continuam existindo para a carga e para o dono do banco, mas a API não as executa mais.
+
+**Por quê.** Sem o token de uma sessão válida de administrador, nenhuma função de administrador roda, nem por SQL direto (testado: sessão inexistente, vencida e de usuário inativo; equipamentista tentando se promover). O teste lista exatamente quais funções são `SECURITY DEFINER` e quais a API executa: uma função nova precisa entrar na lista de propósito.
+
+**Custo.** Uma função de embrulho por operação (19). São curtas (uma linha de SQL cada), e o padrão é sempre o mesmo.
+
+## D25. Quantidade sem perder o BMP
+
+**Contexto.** O balcão pede "3 escudos", não "os BMPs 6100001, 6100002 e 6100003". Mas a rastreabilidade (quem está com qual unidade) é o que dá valor ao controle.
+
+**Decisão.** O material patrimonial continua rastreado por unidade. `core.registrar_retirada_lote` escolhe N unidades disponíveis com `FOR UPDATE SKIP LOCKED` (ou usa as que o equipamentista leu pelo BMP) e passa **cada uma** pela função de retirada que já existia. As unidades do mesmo atendimento ficam ligadas por um **código de operação** (`uuid`); a API gera um código por atendimento, para que vários materiais saiam juntos numa transação (se faltar um item, nada sai). A retirada ganhou o estado de saída (BOM ou REGULAR, este com observação) e a devolução em lote trava as unidades sempre na mesma ordem (id crescente), o que evita deadlock.
+
+**Por quê `SKIP LOCKED`.** Com `FOR UPDATE` simples, o segundo balcão esperaria o primeiro terminar e depois poderia achar menos unidades do que pediu. Com `SKIP LOCKED` ele pula as que estão sendo retiradas e pega as livres na hora. Testado com duas conexões (o segundo recebe a resposta sem esperar e nunca a mesma unidade) e com oito simultâneas (nenhuma unidade sai duas vezes, e o estoque não diverge do histórico).
+
+**Caso-limite encontrado.** Se dois atendimentos travam unidades e um desiste, o outro pode receber "estoque insuficiente" com unidades livres. A mensagem distingue os casos ("parte das unidades está sendo retirada em outro atendimento agora; tente de novo") em vez de dizer "5 disponíveis, pedido 3".
+
+**Alternativa descartada.** Um terceiro tipo de controle ("por quantidade, mas devolvível"), sem BMP: mudaria as CHECKs do histórico, as funções e as análises, e perderia exatamente a informação de qual unidade está com quem.
+
+## D26. Administração com auditoria e travas contra se trancar para fora
+
+**Decisão.** Cadastros pela aplicação (categoria, subcategoria, material, militar, usuário, perfil, senha) passam por funções que validam e devolvem mensagens claras (ALM10 parâmetro, ALM11 duplicado) e gravam `core.auditoria`, que, como o histórico, só aceita INSERT. Ninguém tira o próprio acesso de administrador; sempre sobra um administrador ativo (com a trava de todos os administradores, duas alterações simultâneas não deixam o sistema sem nenhum); um militar com material em posse não sai da unidade; mudar o perfil ou desativar um usuário derruba as sessões dele na hora.
+
+**Por quê.** As movimentações já são a auditoria do estoque (D2); faltava a dos cadastros e acessos. As travas existem porque o erro mais caro de uma tela de usuários é o administrador remover o próprio acesso, ou um militar ser transferido levando material.
+
+## D27. Power BI operacional no banco da aplicação (revisão da D19)
+
+**Contexto.** A D19 dizia que o Power BI não conectava no banco da aplicação. As análises pedidas agora (entradas e saídas, posse, mais movimentados, por militar, por equipamentista, manutenção) são operacionais: o lugar delas é o "sistema vivo".
+
+**Decisão.** O grupo de leitura do BI passa a conectar também no `almoxarifado_app`. Lá ele lê só os schemas `bi`, `analise` e `dq`: nem o `core`, nem a auditoria, nem as senhas e sessões do `app` (testado). A migração 0016 cria `dim_operador`, `fato_posse_atual`, `fato_estoque_atual` e `fato_unidade_atual` (fotografias de agora, cada uma com um grão), acrescenta operação, estados, finalidade e hora ao fato de movimentação, e faz o calendário começar na primeira retirada (no banco da aplicação a referência anda com o uso, e o primeiro mês ficava sem data). O guia tem a Parte A (operacional) e a Parte B (analítico, o que já existia).
+
+**O que continua da D19.** Os números das análises e dos notebooks seguem no banco congelado; a aplicação continua sem conectar nele.
+
+## D28. Tela reorganizada em módulos, ainda sem framework
+
+**Decisão.** A tela virou um sistema de gestão: menu lateral por perfil (barra inferior e menu no celular), roteador por hash e uma página por módulo ES (`web/js/paginas/`), com componentes compartilhados em `ui.js` (tabela que vira cartão no celular, diálogo nativo, painel lateral, avisos, esqueleto de carregamento). Continua sem framework e sem etapa de build, com a mesma CSP e a mesma regra contra XSS (nenhum dado vira HTML). **Sem gráficos**, a pedido: a tela é para operar; a análise fica no Power BI.
+
+**Por quê sem React.** O argumento da D22 continua: React entra nos projetos 4 e 5. Aqui as páginas são formulários, tabelas e listas, que o DOM resolve bem com uma função `el()` de 20 linhas, e não há etapa de build para manter.
+
+**Verificação.** Os fluxos de balcão (retirada com dois materiais por quantidade e um por BMP, devolução avariada, painel do estoque, ciclo) e de administração (categoria, subcategoria duplicada, material com `<img onerror>` no nome, entrada de unidades, militar, usuário, troca de perfil derrubando a sessão do outro) foram percorridos no Chromium em 1440×900 e 390×844, sem erro de console além das respostas 4xx provocadas de propósito. A verificação encontrou e corrigiu: contagem de vencidas diferente entre o menu (unidades) e a página (atendimentos), botões empilhando nas tabelas, campo de formulário esticado pelo vizinho e a sombra do link "pular para o conteúdo" aparecendo no topo.

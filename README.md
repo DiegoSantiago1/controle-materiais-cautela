@@ -1,8 +1,8 @@
 # Controle de Materiais e Cautela
 
-**Análise de dados do controle de material de uma unidade logística (dados fictícios): carga patrimonial, cautelas, uso de equipamentos e estoque de consumo, com PostgreSQL, SQL analítico, Python (Pandas/NumPy) e Power BI. Mais uma tela de balcão, para celular, que registra retiradas e devoluções pelas mesmas regras do banco.**
+**Análise de dados do controle de material de uma unidade logística (dados fictícios): carga patrimonial, cautelas, uso de equipamentos e estoque de consumo, com PostgreSQL, SQL analítico, Python (Pandas/NumPy) e Power BI. Mais um sistema web de controle (retirada, devolução, posse, estoque e administração, no computador e no celular) que grava pelas mesmas regras do banco.**
 
-> Projeto 2 do meu portfólio de Dados, na sequência do [Painel de Vendas](https://github.com/DiegoSantiago1/analise-vendas-concessionaria). Dados, análises e aplicação concluídos; o relatório Power BI é a próxima etapa.
+> Projeto 2 do meu portfólio de Dados, na sequência do [Painel de Vendas](https://github.com/DiegoSantiago1/analise-vendas-concessionaria). Dados, análises e sistema concluídos; o modelo do Power BI está pronto e documentado, e a montagem do relatório é a próxima etapa.
 
 ## O problema
 
@@ -15,7 +15,7 @@ Este projeto transforma essa rotina em quatro perguntas de negócio, respondidas
 3. **Uso:** o que sobra, o que falta e o que se desgasta?
 4. **Consumo:** que item vai faltar, e quais têm o estoque mínimo mal definido?
 
-> **Todos os dados são fictícios**, gerados em Python. Nenhuma informação real (pessoas, unidades, locais, números de patrimônio) está neste repositório, e o projeto não inclui armamento nem material de armaria.
+> **Todos os dados são fictícios**, gerados em Python. Nenhuma informação real (pessoas, unidades, locais, números de patrimônio) está neste repositório, e o projeto não inclui armamento de fogo, munição nem material de armaria (tonfa, espadim e sabre entram como material de controle de distúrbios e de cerimonial).
 
 ## Resultados
 
@@ -60,9 +60,10 @@ flowchart LR
     AN --> NB["Notebooks<br/>Pandas / NumPy"]
     BI --> PBI["Power BI<br/>(usuário só leitura)"]
     AN --> PBI
-    C -->|"mesmos dados,<br/>banco próprio"| APP[("almoxarifado_app")]
-    TELA["Tela do equipamentista<br/>(celular)"] --> API["API Node/TypeScript"]
-    API -->|"só pelas funções<br/>de regra"| APP
+    C -->|"mesmos dados + catálogo militar<br/>+ setembro simulado"| APP[("almoxarifado_app")]
+    TELA["Tela web<br/>(computador e celular)"] --> API["API Node/TypeScript"]
+    API -->|"só funções app.*<br/>com o token da sessão"| APP
+    APP -->|"bi operacional"| PBI
 ```
 
 - **`core`:** cadastros, estado atual e um **histórico de movimentações imutável** (só INSERT; triggers bloqueiam UPDATE, DELETE e TRUNCATE; erro se corrige com estorno). Toda movimentação passa por uma **função PL/pgSQL** que confere o perfil, trava a linha (`SELECT ... FOR UPDATE`), valida a regra e grava tudo numa transação.
@@ -70,26 +71,35 @@ flowchart LR
 - **`analise`:** as quatro análises como views SQL (CTEs, window functions, *gaps and islands*, similaridade de trigramas, Levenshtein).
 - **`dq`:** qualidade de dados, só com o que constraints não conseguem impor (encadeamento do histórico via `LAG`, estado × histórico, etc.).
 - **`bi`:** modelo estrela para o Power BI, lido por um usuário **somente leitura** que não enxerga `core` nem `staging` ([guia](docs/POWERBI.md)).
-- **`app`:** login e sessões da tela do equipamentista (senha em `scrypt`, sessão guardada só como hash).
+- **`app`:** login e sessões (senha em `scrypt`, sessão guardada só como hash) e as funções que a API pode executar, todas exigindo uma sessão válida.
 
-## Aplicação: o balcão do equipamentista
+## Aplicação: o sistema do almoxarifado
 
-No balcão, quem entrega o material precisa registrar quem levou o quê em poucos toques e ver na hora o que está vencido. Hoje isso costuma ser caderno ou planilha, justamente de onde vêm os erros que a conferência (A1) e a análise de atrasos (A2) encontraram.
+No balcão, quem entrega o material precisa registrar **quem levou o quê, quanto, quem entregou e quando**, em poucos toques, e ver na hora o que está vencido. Hoje isso costuma ser caderno ou planilha, justamente de onde vêm os erros que a conferência (A1) e a análise de atrasos (A2) encontraram.
 
 <p align="center">
-  <img src="docs/img/app_cautelas_em_aberto.png" width="24%" alt="Cautelas em aberto, com as vencidas em destaque">
-  <img src="docs/img/app_nova_retirada.png" width="24%" alt="Nova retirada em três passos: material, quem recebe, confirmar">
-  <img src="docs/img/app_devolucao.png" width="24%" alt="Devolução com o estado do material; avaria exige observação">
-  <img src="docs/img/app_tema_escuro.png" width="24%" alt="Tema escuro">
+  <img src="docs/img/app_inicio.png" width="49%" alt="Início: ações rápidas, contadores operacionais, posses vencidas e últimas movimentações">
+  <img src="docs/img/app_nova_retirada.png" width="49%" alt="Nova retirada: militar, vários materiais com quantidade e o resumo com quem entrega">
+  <img src="docs/img/app_cautelas_em_aberto.png" width="49%" alt="Em posse: militar, material, quantidade, retirada, quem entregou e prazo">
+  <img src="docs/img/app_devolucao.png" width="49%" alt="Receber devolução: unidades marcadas por BMP e o estado em que voltaram">
+  <img src="docs/img/app_estoque.png" width="49%" alt="Estoque: total, disponível, em posse, manutenção, mínimo e o painel com cada unidade">
+  <img src="docs/img/app_tema_escuro.png" width="49%" alt="Histórico no tema escuro, com o ciclo retirada, posse e devolução">
 </p>
 
-- **Cautelas em aberto**, as vencidas primeiro, com filtro por material, BMP, pessoa ou setor.
-- **Nova retirada em três passos:** buscar o material (sem acento, por nome, BMP ou série), buscar quem recebe e confirmar. O prazo vem do cadastro do material.
-- **Devolução** com o estado do material: avariado ou inservível exige observação e manda a unidade para manutenção ou baixa.
+- **Militares identificados pelo nome de guerra** e pelo posto/graduação (S2 a CEL): "SGT SOUZA" é como o equipamentista procura no balcão.
+- **Nova retirada:** o militar, um ou mais materiais (por quantidade, e o banco escolhe as unidades, ou pelo BMP da etiqueta), o estado em que saíram (bom ou regular, com observação) e a finalidade. Tudo numa transação, com um **código de operação** que liga as unidades do mesmo atendimento; sai um comprovante com os BMPs e os prazos.
+- **Receber devolução:** marca as unidades que voltaram (pode ser parte de uma retirada) e o estado: avariado vai para manutenção, inservível para baixa. A retirada original continua no histórico.
+- **Em posse:** quem está com cada material, desde quando, quem entregou e o prazo, com as vencidas primeiro, busca e filtros.
+- **Estoque:** total, disponível, em posse, em manutenção, indisponível e mínimo por material, atualizados a cada movimento, e o painel de cada material com todas as unidades. Estoque negativo é impossível: o banco recusa.
+- **Histórico** com filtros e o **ciclo** de cada atendimento (retirada → posse → devolução, com quem entregou e quem recebeu).
+- **Administração:** materiais e categorias, militares (cadastro, edição, saída da unidade), usuários e permissões (perfil, ativação, senha) e a auditoria de cada alteração.
+- **Sem gráficos na tela**, de propósito: ela é para operar. Análise fica no Power BI (relatório operacional na [Parte A do guia](docs/POWERBI.md)).
 
-**A API não reescreve regra nenhuma.** Ela chama as mesmas funções do banco que a carga usa, e o usuário dela **não tem permissão de gravar em nenhuma tabela** do `core`: só executa as funções de retirada e devolução, que rodam com os direitos do dono (`SECURITY DEFINER`, D20). Se a API fosse comprometida, o histórico continuaria protegido pelo banco. Um perfil de consulta que tenta retirar recebe 403 **do banco**, não de um `if` na API.
+**Perfis:** o **equipamentista** opera o balcão (retirada, devolução, posse, estoque, histórico); o **administrador** tem acesso completo; há ainda estoquista (balcão + entradas e ajustes) e consulta (só leitura). A tela esconde o que o perfil não pode, a API responde 403 e, por fim, a função do banco confere o perfil de novo.
 
-**Segurança testada** (D21): senha com `scrypt`, sessão em cookie `HttpOnly` + `SameSite=Strict` guardada só como hash, limite de tentativas de login, a mesma resposta (e o mesmo tempo) para login inexistente e senha errada, proteção contra CSRF (JSON obrigatório + conferência de origem), CSP sem script inline e nenhum dado inserido como HTML na tela. A aplicação usa um **banco próprio** (D19), para não mexer nos números das análises.
+**A API não reescreve regra nenhuma.** Ela chama as mesmas funções do banco que a carga usa, e o usuário dela **não tem permissão de gravar em nenhuma tabela** do `core`. Desde a migração 0015 ele executa só funções `app.*`, que recebem o **hash do token da sessão** e descobrem no banco quem está logado (D24): mesmo com uma injeção de SQL na API, ninguém age como administrador sem o token de um administrador logado.
+
+**Segurança testada** (D21): senha com `scrypt`, sessão em cookie `HttpOnly` + `SameSite=Strict` guardada só como hash, limite de tentativas de login, a mesma resposta (e o mesmo tempo) para login inexistente e senha errada, proteção contra CSRF (JSON obrigatório + conferência de origem), CSP sem script inline e nenhum dado inserido como HTML na tela (testado com um nome de material contendo `<img onerror>`). A aplicação usa um **banco próprio** (D19), com o catálogo militar e um mês de uso simulado (D23), para não mexer nos números das análises.
 
 ## Decisões técnicas (resumo)
 
@@ -101,11 +111,14 @@ As decisões, com contexto, alternativas e o que foi medido, estão em [docs/DEC
 - **Pessoa x processo com estatística (D16).** A taxa esperada é calculada pela mistura de materiais, e a pessoa só é apontada se o limite inferior do intervalo de Wilson ficar acima dela.
 - **Demanda censurada (D17).** Dias sem estoque ficam fora da média de demanda, senão os itens que mais faltam são os mais subestimados.
 - **Menor privilégio no Power BI (D18).** Um usuário que só lê, com funções de escrita inacessíveis. Isso inclui a armadilha de views com funções `SECURITY INVOKER`.
+- **Quantidade sem perder o BMP (D25).** "3 escudos" escolhe 3 unidades com `FOR UPDATE SKIP LOCKED`: dois balcões ao mesmo tempo nunca pegam a mesma unidade (testado com 8 conexões simultâneas), e cada unidade passa pela regra que já existia.
+- **O banco descobre quem está logado (D24).** As funções da aplicação recebem o hash do token, não um id de usuário: fecha a limitação que a D20 registrava.
 
 ## Qualidade
 
-- **402 testes em Python** (`pytest`): integridade do schema com entradas hostis, regras de movimentação, concorrência com COMMIT real, reprodutibilidade do gerador, os padrões P1 a P16, fidelidade campo a campo da carga, cada regra de qualidade (injetando a violação), cada análise e as permissões do Power BI e da API.
-- **68 testes da API** (`node:test`, por HTTP, como o navegador): login e sessão, força bruta, pedidos hostis (ids falsos, JSON quebrado, caractere nulo, corpo gigante, injeção de SQL), CSRF, cabeçalhos de segurança, as regras chegando como status HTTP e 10 retiradas simultâneas da mesma unidade (passa exatamente uma).
+- **574 testes em Python** (`pytest`): integridade do schema com entradas hostis, regras de movimentação, retirada e devolução por quantidade, administração e auditoria, sessão válida nas funções da aplicação, concorrência com COMMIT real, reprodutibilidade do gerador e da atividade simulada, os padrões P1 a P16, fidelidade campo a campo da carga, cada regra de qualidade (injetando a violação), cada análise e as permissões do Power BI e da API.
+- **133 testes da API** (`node:test`, por HTTP, como o navegador): login e sessão, força bruta, a matriz de permissões (o equipamentista recebe 403 em toda rota de administrador), pedidos hostis (ids falsos, listas com repetição, JSON quebrado, caractere nulo, corpo gigante, injeção de SQL), CSRF, cabeçalhos de segurança, as regras chegando como status HTTP, retirada com vários materiais tudo-ou-nada e 10 retiradas simultâneas da mesma unidade (passa exatamente uma).
+- **Navegador de verdade** (Playwright, Chromium, 1440×900 e 390×844): os fluxos de balcão e de administração sem nenhum erro de console, inclusive XSS e queda de sessão depois de troca de perfil.
 - Banco de testes separado, recriado pelas migrações a cada execução: sobe, desce e sobe de novo, o que também testa os *downgrades*.
 - `ruff` (lint, formatação e regras de segurança, inclusive nos notebooks) e `mypy --strict`.
 - **Reprodutível:** mesma semente e mesma data final geram arquivos byte a byte idênticos (SHA-256 no [manifesto](data/gerado/manifesto.json)).
@@ -117,10 +130,10 @@ As decisões, com contexto, alternativas e o que foi medido, estão em [docs/DEC
 | PostgreSQL 16 (Docker) | integridade no banco, funções de regra, views analíticas, extensões `pg_trgm`, `fuzzystrmatch`, `unaccent` |
 | SQL | CTEs, window functions (`LAG`, `LEAD`, somas acumuladas, `RANK`), *gaps and islands*, `LATERAL` |
 | Python, NumPy, Pandas | gerador de dados, intervalo de Wilson, ponto de reposição, avaliação contra o gabarito, notebooks |
-| Alembic | migrações versionadas com SQL escrito à mão (12 migrações) |
-| Power BI | relatório sobre o modelo estrela (guia em `docs/POWERBI.md`) |
-| Node 24, TypeScript, Express 5, `pg` | API da tela do equipamentista, com SQL escrito à mão |
-| HTML, CSS, JavaScript | tela mobile-first, sem framework |
+| Alembic | migrações versionadas com SQL escrito à mão (16 migrações) |
+| Power BI | relatórios operacional e analítico sobre o modelo estrela (guia e tema em `docs/`) |
+| Node 24, TypeScript, Express 5, `pg` | API do sistema, com SQL escrito à mão |
+| HTML, CSS, JavaScript | tela responsiva, módulos ES por página, sem framework nem etapa de build |
 | pytest, ruff, mypy | testes, lint e tipos (Python) |
 | `node:test`, Biome, `tsc` | testes, lint e tipos (API e tela) |
 
@@ -151,18 +164,19 @@ python -m almox.gerador
 python -m almox.carga --recriar
 ```
 
-### A tela do equipamentista
+### O sistema (API e tela)
 
 Requisito extra: Node 24. Com os passos 1 a 4 feitos:
 
 ```bash
-# 7. Banco da aplicação, com os mesmos dados fictícios (~1 min)
+# 7. Banco da aplicação: os mesmos dados, o catálogo militar e setembro de uso (~1,5 min)
 python -m almox.carga --recriar --banco app
 
-# 8. Dependências da API e senha de um usuário (digitada, não aparece na tela)
+# 8. Dependências da API e senha dos usuários (digitada, não aparece na tela)
 cd api
 npm install
-npm run definir-senha -- enzo.04      # perfil EQUIPAMENTISTA; heitor.09 é CONSULTA
+npm run definir-senha -- rafaela.01   # ADMINISTRADOR
+npm run definir-senha -- enzo.04      # EQUIPAMENTISTA (heitor.09 é CONSULTA)
 
 # 9. Sobe a API e a tela em http://127.0.0.1:3334
 npm start
@@ -189,19 +203,21 @@ pytest -m "not integracao"        # só os testes que não usam o banco
 
 ```
 db/bootstrap.sql              usuários e bancos (superusuário, idempotente)
-db/migracoes/versions/        12 migrações: core, staging, análises, dq, bi, app
+db/migracoes/versions/        16 migrações: core, staging, análises, dq, bi, app, operação, administração
 src/almox/gerador/            gerador de dados sintéticos (catálogo, simulação, planilha)
 src/almox/carga.py            carga pelas funções de regra, com conferência cruzada
+src/almox/complemento.py      catálogo militar e militares do banco da aplicação
+src/almox/atividade.py        setembro de uso simulado (plano puro + execução pelas regras)
 src/almox/analise/            conferência, cautela, uso e consumo (usados pelos notebooks)
 notebooks/                    as quatro análises, executadas, com insights
-tests/                        402 testes (Python)
-api/                          API Node/TypeScript e 68 testes (node:test)
-web/                          tela do equipamentista (HTML, CSS, JavaScript)
-docs/                         plano, decisões técnicas e guia do Power BI
+tests/                        574 testes (Python)
+api/                          API Node/TypeScript (rotas por assunto) e 133 testes (node:test)
+web/                          tela (HTML, CSS, JavaScript; uma página por módulo em js/paginas/)
+docs/                         plano, decisões técnicas, guia e tema do Power BI
 ```
 
 ## Limitações e próximos passos
 
-- **Relatório Power BI:** o modelo está pronto e documentado; a montagem é a próxima etapa.
-- **Aplicação:** cobre o balcão (retirada e devolução de material patrimonial). Entrada de material, consumo, estorno e cadastros continuam só pelas funções do banco, sem tela. O limite de tentativas de login fica na memória de um processo, e a API roda só em `127.0.0.1`, sem HTTPS (para publicar, entraria um proxy com TLS e o cookie `Secure`).
+- **Relatório Power BI:** os dois modelos estão prontos, testados e documentados, com números de referência; a montagem do arquivo `.pbix` é a próxima etapa.
+- **Aplicação:** estorno pela tela e devolução feita por outra pessoa (em nome do detentor) ainda não existem; o estorno continua só pela função do banco. O limite de tentativas de login fica na memória de um processo, e a API roda só em `127.0.0.1`, sem HTTPS (para publicar, entraria um proxy com TLS e o cookie `Secure`).
 - Os padrões dos dados foram plantados. As análises foram validadas por conseguirem reencontrá-los, o que mostra que o método funciona, mas não substitui dados reais.
