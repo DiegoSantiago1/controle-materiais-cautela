@@ -26,7 +26,9 @@ import psycopg
 import sqlalchemy.exc
 from psycopg import sql
 
+from almox.atividade import carregar_atividade
 from almox.banco import Conexao, chamar_funcao, conectar
+from almox.complemento import CONSUMOS, MATERIAIS, NOVOS_MILITARES, carregar_complemento
 from almox.config import RAIZ_PROJETO, ConfigBanco, ConfigError, carregar_config_banco
 from almox.gerador.planilha import estado_final
 from almox.gerador.simulacao import Evento
@@ -399,6 +401,26 @@ def main(argumentos: list[str] | None = None) -> int:
         if args.banco == "app":
             config = config.do_banco_da_aplicacao()
         resultado = carregar(config, args.pasta)
+        if args.banco == "app":
+            # Só no banco da aplicação (D23): materiais operacionais, militares novos e o
+            # mês de setembro de uso, numa transação.
+            with conectar(config) as con:
+                unidades = carregar_complemento(con)
+                atividade = carregar_atividade(con)
+                divergencias = con.execute(
+                    "SELECT count(*) FROM core.vw_divergencia_estado"
+                ).fetchone()
+                if divergencias is None or divergencias[0] != 0:
+                    raise ErroDeCarga("a atividade de setembro deixou estado divergente")
+            print(
+                f"Materiais operacionais: {len(MATERIAIS)} patrimoniais ({unidades} unidades) "
+                f"e {len(CONSUMOS)} de consumo; {len(NOVOS_MILITARES)} militares novos."
+            )
+            print(
+                f"Setembro: {atividade.retiradas} retiradas, {atividade.devolucoes} devoluções, "
+                f"{atividade.avarias} avarias, {atividade.retornos_da_manutencao} retornos da "
+                f"manutenção, {atividade.itens_sem_estoque} itens sem estoque."
+            )
     except (ConfigError, ErroDeCarga) as erro:
         print(f"Erro: {erro}", file=sys.stderr)
         return 1

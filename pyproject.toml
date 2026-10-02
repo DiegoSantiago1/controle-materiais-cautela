@@ -36,6 +36,7 @@ select = [
 "tests/**" = ["S101", "S105", "S106"]
 # Catálogo: tabelas de parâmetros, mais legíveis uma por linha.
 "src/almox/gerador/catalogo.py" = ["E501"]
+"src/almox/complemento.py" = ["E501"]  # tabela de materiais, uma linha por tipo
 
 [tool.ruff.lint.isort]
 known-first-party = ["almox"]
