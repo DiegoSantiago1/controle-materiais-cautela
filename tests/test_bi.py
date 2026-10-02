@@ -71,16 +71,21 @@ def test_bi_nao_le_o_core_nem_escreve(bi: Conexao, comando: str) -> None:
         bi.execute(comando)
 
 
-def test_calendario_cobre_um_ano_ate_a_referencia(bi: Conexao) -> None:
+def test_calendario_cobre_um_ano_e_desde_a_primeira_retirada(bi: Conexao) -> None:
+    """Pelo menos os 12 meses até a referência, um dia por linha, sem buraco, e desde a
+    primeira retirada (no banco da aplicação a referência anda com o uso)."""
     with bi:
         linha = bi.execute(
-            "SELECT count(*), max(data) - min(data), count(*) FILTER (WHERE dia_util) "
+            "SELECT count(*), max(data) - min(data), count(*) FILTER (WHERE dia_util), "
+            "coalesce(min(data) <= (SELECT min(data) FROM bi.fato_movimentacao "
+            "WHERE tipo = 'RETIRADA'), true) "  # sem nenhuma retirada, nada a exigir
             "FROM bi.dim_calendario"
         ).fetchone()
     assert linha is not None
-    dias, amplitude, uteis = linha
-    assert (dias, amplitude) == (365, 364)
-    assert 259 <= uteis <= 262  # 52 semanas de 5 dias + 1 ou 2 dias
+    dias, amplitude, uteis, desde_a_primeira = linha
+    assert dias >= 365 and amplitude == dias - 1
+    assert 0.70 <= uteis / dias <= 0.73  # 5 de cada 7 dias
+    assert desde_a_primeira
 
 
 def test_bi_conecta_no_banco_da_aplicacao_so_para_ler_o_bi(banco_teste: ConfigBanco) -> None:

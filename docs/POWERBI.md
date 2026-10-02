@@ -1,23 +1,152 @@
-# Guia do relatório Power BI
+# Guia do Power BI
 
-O banco já entrega os dados prontos para o Power BI no schema `bi` (modelo estrela) e nas views de análise. Este guia mostra como conectar, montar o modelo e as medidas, e sugere as páginas do relatório, uma por pergunta de negócio.
+O banco já entrega os dados prontos para o Power BI no schema `bi` (modelo estrela). São dois relatórios, cada um lendo o banco que responde à sua pergunta:
 
-## 1. Conexão (somente leitura)
+| Relatório | Banco | Pergunta | Seção |
+|---|---|---|---|
+| **Operacional** | `almoxarifado_app` (o "sistema vivo") | O que entrou e saiu, com quem está, quem atendeu, o que está em manutenção? | [Parte A](#parte-a--relatório-operacional) |
+| **Analítico** | `almoxarifado` (congelado em 31/08/2026) | Onde a planilha não bate, quem atrasa, o que sobra e o que falta? | [Parte B](#parte-b--relatório-analítico) |
 
-O Power BI conecta com um usuário **que só lê**: o `almox_bi` (nome e senha no `.env`, variáveis `ALMOX_BI_USER` e `ALMOX_BI_PASSWORD`). Ele enxerga os schemas `bi`, `analise` e `dq`. **Não** enxerga as tabelas do `core` nem o `staging`, e não consegue gravar nada: isso é testado em `tests/test_bi.py`.
+O sistema web não tem gráficos de propósito: a tela é para operar (retirar, devolver, conferir). Análise e acompanhamento ficam no Power BI.
+
+## Conexão (somente leitura, vale para os dois)
+
+O Power BI conecta com um usuário **que só lê**: o `almox_bi` (nome e senha no `.env`, variáveis `ALMOX_BI_USER` e `ALMOX_BI_PASSWORD`). Ele enxerga os schemas `bi`, `analise` e `dq`. **Não** enxerga as tabelas do `core`, a auditoria, o `staging`, nem as senhas e sessões do schema `app`, e não consegue gravar nada: isso é testado em `tests/test_bi.py`.
 
 No Power BI Desktop: **Obter dados → Banco de dados PostgreSQL**.
 
 | Campo | Valor |
 |---|---|
 | Servidor | `127.0.0.1:5432` |
-| Banco de dados | `almoxarifado` |
+| Banco de dados | `almoxarifado_app` (operacional) ou `almoxarifado` (analítico) |
 | Modo | **Importar** (os dados cabem com folga; o relatório fica rápido) |
 | Credenciais | Banco de dados → usuário `almox_bi` e a senha do `.env` |
 
-> Se o Power BI pedir, marque a opção para não usar criptografia na conexão local, ou instale o driver Npgsql que ele sugerir. O banco só aceita conexões desta máquina (porta publicada em `127.0.0.1`).
+> Se o Power BI pedir, marque a opção para não usar criptografia na conexão local. O banco só aceita conexões desta máquina (porta publicada em `127.0.0.1`).
 
-## 2. Tabelas a importar
+**Tema:** Exibir → Temas → Procurar temas → `docs/powerbi/tema-verde.json`. É a mesma identidade da tela (verde), com âmbar e vermelho só para atenção e problema.
+
+---
+
+## Parte A — Relatório operacional
+
+### A.1 Tabelas a importar (schema `bi`)
+
+| Tabela | Tipo | Chave | O que tem |
+|---|---|---|---|
+| `dim_calendario` | dimensão | `data` | um dia por linha, da primeira retirada (01/09/2025) até a última movimentação |
+| `dim_material` | dimensão | `codigo` | nome, categoria, subcategoria, controle, prazo, valor, estoque mínimo |
+| `dim_pessoa` | dimensão | `matricula` | militar: posto/graduação, nome de guerra, setor, entrada e saída |
+| `dim_setor` | dimensão | `sigla` | nome do setor |
+| `dim_operador` | dimensão | `login` | quem opera o balcão: perfil, posto, nome de guerra (`operador` = "SGT ENZO") |
+| `fato_movimentacao` | fato | `id` | cada movimento: tipo, material, BMP, militar, quem executou, quantidade, operação, estados, finalidade, hora |
+| `fato_posse_atual` | fato | `bmp` | cada unidade com um militar agora: retirada, prazo, vencida, horas em posse e de atraso, quem entregou |
+| `fato_estoque_atual` | fato | `material` | total, disponível, em posse, manutenção, indisponível, mínimo, situação, valor disponível |
+| `fato_unidade_atual` | fato | `bmp` | cada unidade: situação, local, com quem está, desde quando e há quantos dias |
+
+### A.2 Relacionamentos
+
+Em **Exibição de modelo**, ligue as dimensões aos fatos (um para muitos, filtro em direção única, da dimensão para o fato):
+
+| Dimensão (lado 1) | Fato (lado muitos) |
+|---|---|
+| `dim_calendario[data]` | `fato_movimentacao[data]`, `fato_posse_atual[data_retirada]` |
+| `dim_material[codigo]` | `fato_movimentacao[material]`, `fato_posse_atual[material]`, `fato_estoque_atual[material]`, `fato_unidade_atual[material]` |
+| `dim_pessoa[matricula]` | `fato_movimentacao[pessoa]`, `fato_posse_atual[pessoa]`, `fato_unidade_atual[pessoa]` |
+| `dim_operador[login]` | `fato_movimentacao[executado_por]`, `fato_posse_atual[entregue_por]` |
+| `dim_setor[sigla]` | `dim_pessoa[setor]` |
+
+Marque `dim_calendario` como **tabela de datas** (botão direito → Marcar como tabela de datas → coluna `data`).
+
+**Por que três fatos "atuais" e não um só:** cada um tem um grão diferente. `fato_posse_atual` é uma linha por unidade em posse, `fato_estoque_atual` uma por material e `fato_unidade_atual` uma por unidade cadastrada. Misturar grãos numa tabela faz as somas contarem a mesma coisa duas vezes.
+
+**Por que "operação":** uma retirada de 3 escudos grava 3 linhas (uma por BMP) com o mesmo código de operação. Para contar **atendimentos** use `DISTINCTCOUNT(operacao)`; para contar **unidades**, some `quantidade`.
+
+### A.3 Medidas (DAX)
+
+Crie uma tabela vazia `Medidas` (Inserir → Inserir dados → OK) para guardar as medidas num só lugar.
+
+```dax
+Retiradas = CALCULATE ( DISTINCTCOUNT ( fato_movimentacao[operacao] ), fato_movimentacao[tipo] = "RETIRADA" )
+```
+Atendimentos de retirada no filtro da página. `DISTINCTCOUNT` conta cada operação uma vez, mesmo que ela tenha várias unidades.
+
+```dax
+Unidades retiradas = CALCULATE ( SUM ( fato_movimentacao[quantidade] ), fato_movimentacao[tipo] = "RETIRADA" )
+Devoluções = CALCULATE ( DISTINCTCOUNT ( fato_movimentacao[operacao] ), fato_movimentacao[tipo] = "DEVOLUCAO" )
+Unidades devolvidas = CALCULATE ( SUM ( fato_movimentacao[quantidade] ), fato_movimentacao[tipo] = "DEVOLUCAO" )
+Entradas (unidades) = CALCULATE ( SUM ( fato_movimentacao[quantidade] ), fato_movimentacao[tipo] = "ENTRADA" )
+```
+O mesmo padrão: `CALCULATE` troca o filtro do tipo e mantém os outros (mês, material, setor).
+
+```dax
+Devolvidas com avaria =
+CALCULATE (
+    COUNTROWS ( fato_movimentacao ),
+    fato_movimentacao[estado_devolucao] IN { "AVARIADO", "INSERVIVEL" }
+)
+
+% de avaria = DIVIDE ( [Devolvidas com avaria], [Unidades devolvidas] )
+```
+`IN { ... }` é a lista de valores aceitos. `DIVIDE` devolve vazio (e não erro) quando não há devolução no filtro.
+
+```dax
+Em posse agora = COUNTROWS ( fato_posse_atual )
+Posse vencida = CALCULATE ( COUNTROWS ( fato_posse_atual ), fato_posse_atual[vencida] = TRUE () )
+Militares com material = DISTINCTCOUNT ( fato_posse_atual[pessoa] )
+Atraso médio (h) = CALCULATE ( AVERAGE ( fato_posse_atual[horas_de_atraso] ), fato_posse_atual[vencida] = TRUE () )
+```
+
+```dax
+Disponível = SUM ( fato_estoque_atual[disponivel] )
+Em manutenção = SUM ( fato_estoque_atual[em_manutencao] )
+Materiais em alerta = CALCULATE ( COUNTROWS ( fato_estoque_atual ), fato_estoque_atual[em_alerta] = TRUE () )
+Valor disponível = SUM ( fato_estoque_atual[valor_disponivel] )
+Dias médios em manutenção =
+CALCULATE ( AVERAGE ( fato_unidade_atual[dias_na_situacao] ), fato_unidade_atual[status] = "EM_MANUTENCAO" )
+```
+As medidas "atuais" são uma fotografia de agora: não use `dim_calendario` como filtro nelas (a data da foto é a de hoje).
+
+### A.4 Páginas sugeridas
+
+| Página | Pergunta | Visuais |
+|---|---|---|
+| **Estoque agora** | O que temos e o que está em alerta? | cartões: `Disponível`, `Em posse agora`, `Em manutenção`, `Materiais em alerta`, `Valor disponível`; matriz categoria → material com total, disponível, em posse, manutenção, mínimo e `situacao` (formatação condicional: vermelho para `SEM_ESTOQUE`/`CRITICO`, âmbar para `ABAIXO_DO_MINIMO`); segmentação por categoria |
+| **Movimentações** | O que entrou e saiu, e quando? | colunas por dia com `Unidades retiradas` e `Unidades devolvidas` (`dim_calendario[data]`); barras dos 10 materiais mais retirados (filtro Top N por `Unidades retiradas`); barras de `Retiradas` por `fato_movimentacao[finalidade]`; segmentação de período |
+| **Posse e prazos** | Com quem está o material e quem está atrasado? | tabela de `fato_posse_atual` com `dim_pessoa[posto_graduacao]`, `dim_pessoa[nome_guerra]`, `dim_material[nome]`, `retirada_em`, `prazo`, `horas_de_atraso` e `dim_operador[operador]` (quem entregou), ordenada por atraso; barras de `Posse vencida` por setor |
+| **Equipamentistas** | Quem atende e em que horário? | barras agrupadas de `Retiradas` e `Devoluções` por `dim_operador[operador]`; matriz `operador` × `fato_movimentacao[hora]` com `Retiradas` (mapa de calor: o pico do balcão) |
+| **Militares** | Quem mais retira e quem mais atrasa? | barras de `Unidades retiradas` por militar (posto + nome de guerra); tabela de `Posse vencida` por militar |
+| **Manutenção** | O que está parado e por quê? | tabela de `fato_unidade_atual` filtrada em `EM_MANUTENCAO`, `BAIXA_PENDENTE` e `NAO_LOCALIZADA`, com `dias_na_situacao`; barras de `% de avaria` por subcategoria |
+
+### A.5 Números de referência (setembro de 2026)
+
+Para conferir se o relatório está certo. São fixos porque a atividade de setembro é gerada com semente fixa (`almox.atividade`). Mudam assim que alguém usar o sistema; para voltar a eles, recarregue o banco da aplicação (`python -m almox.carga --recriar --banco app`).
+
+| Medida (filtro: 01/09 a 30/09/2026) | Valor |
+|---|---|
+| `Retiradas` / `Unidades retiradas` | 395 / 2.277 |
+| `Devoluções` / `Unidades devolvidas` | 410 / 2.112 |
+| `Entradas (unidades)` | 2.402 (1.723 movimentos: a incorporação de 01/09, um lote de coletes e reposições de consumo) |
+| `Devolvidas com avaria` / `% de avaria` | 23 / 1,09% |
+| Retiradas por finalidade | treino de choque 144, serviço de dia 120, manutenção das instalações 65, desfile 30, campanha 22, salto 14 |
+| Retiradas / devoluções por equipamentista | SGT ENZO 124 / 143, SGT MATEUS 109 / 103, CB GUERRA 88 / 80, CB PAULO 74 / 84 |
+| Horário de pico (atendimentos) | 7h (191), 13h (144), 17h (137) |
+
+| Medida atual (logo depois de recarregar) | Valor |
+|---|---|
+| `Em posse agora` / `Militares com material` | 68 / 17 |
+| Unidades por situação (`fato_unidade_atual`) | disponível 1.986, em posse 68, baixada 28, baixa pendente 8, em manutenção 4, não localizada 4, sem tombamento 3 |
+| `Materiais em alerta` / `Valor disponível` | 8 / R$ 1.660.321,00 |
+
+`Posse vencida` depende do relógio: as posses do serviço de 01/10 vencem em 02/10 de manhã.
+
+---
+
+## Parte B — Relatório analítico
+
+Banco `almoxarifado` (congelado em 31/08/2026, o mesmo dos notebooks).
+
+### B.1 Tabelas a importar
 
 **Modelo estrela** (schema `bi`):
 
@@ -25,7 +154,7 @@ No Power BI Desktop: **Obter dados → Banco de dados PostgreSQL**.
 |---|---|---|---|
 | `bi.dim_calendario` | dimensão | `data` | um dia por linha nos 12 meses: ano, mês, trimestre, dia útil |
 | `bi.dim_material` | dimensão | `codigo` | catálogo: nome, categoria, subcategoria, controle, custo |
-| `bi.dim_pessoa` | dimensão | `matricula` | nome, setor, datas de entrada e saída |
+| `bi.dim_pessoa` | dimensão | `matricula` | nome, setor, datas de entrada e saída, posto e nome de guerra |
 | `bi.dim_setor` | dimensão | `sigla` | nome do setor |
 | `bi.fato_movimentacao` | fato | `id` | cada movimentação do histórico (15,7 mil) |
 | `bi.fato_cautela` | fato | `retirada_id` | cada cautela: prazo, devolução, atraso |
@@ -34,9 +163,7 @@ No Power BI Desktop: **Obter dados → Banco de dados PostgreSQL**.
 **Tabelas de apoio** (já agregadas; úteis para cartões e tabelas):
 `analise.vw_uso_material` (A3), `analise.vw_status_consumo` (situação atual), `analise.vw_ruptura` (episódios de falta), `analise.vw_atraso_pessoa` (A2), `analise.vw_conferencia_planilha` (A1), `dq.vw_ultima_execucao` (qualidade de dados).
 
-## 3. Relacionamentos
-
-Em **Exibição de modelo**, ligue as dimensões aos fatos (um para muitos, filtro em direção única, da dimensão para o fato):
+### B.2 Relacionamentos
 
 | Dimensão (lado 1) | Fato (lado muitos) |
 |---|---|
@@ -47,15 +174,9 @@ Em **Exibição de modelo**, ligue as dimensões aos fatos (um para muitos, filt
 | `dim_pessoa[matricula]` | `fato_movimentacao[pessoa]`, `fato_cautela[pessoa]` |
 | `dim_setor[sigla]` | `dim_pessoa[setor]` |
 
-Marque `dim_calendario` como **tabela de datas** (botão direito → Marcar como tabela de datas → coluna `data`). Sem isso, as funções de inteligência de tempo do DAX não funcionam direito.
-
 **Por que modelo estrela:** cada fato guarda só códigos e números; os textos (nome do material, setor) ficam nas dimensões. O filtro escolhido numa dimensão (um setor, um mês) passa para todos os fatos ligados a ela, e o modelo fica menor e mais rápido.
 
-## 4. Medidas (DAX), com o que cada uma faz
-
-> **Não verificado aqui:** as medidas seguem a sintaxe padrão do DAX, mas não foram executadas (o Power BI não roda no ambiente em que o projeto foi construído). Os dados que elas leem foram testados; confira o resultado de cada medida com os números de referência da seção 5.
-
-Crie uma tabela vazia `Medidas` (Inserir → Inserir dados → OK) para guardar as medidas num só lugar.
+### B.3 Medidas (DAX)
 
 ```dax
 Cautelas = COUNTROWS ( fato_cautela )
@@ -102,7 +223,7 @@ Valor parado = SUM ( 'analise vw_uso_material'[valor_parado] )
 ```
 (O nome da tabela depende de como o Power BI a nomear na importação.)
 
-## 5. Páginas sugeridas (uma por pergunta)
+### B.4 Páginas sugeridas (uma por pergunta)
 
 | Página | Pergunta | Visuais sugeridos |
 |---|---|---|
@@ -114,6 +235,10 @@ Valor parado = SUM ( 'analise vw_uso_material'[valor_parado] )
 
 Os notebooks (`notebooks/0*.ipynb`) têm os números de referência para conferir se o relatório está certo: por exemplo, 5.994 cautelas no ano, 11,8% com atraso e 56 dias sem toner.
 
-## 6. Atualizar
+---
 
-Os dados são fictícios e fixos (semente 42). Se o banco for recarregado (`python -m almox.carga --recriar`), basta **Atualizar** no Power BI. Como o usuário do BI e as permissões são recriados pelo bootstrap e pelas migrações, a conexão continua funcionando.
+## Verificação e atualização
+
+> **Não verificado aqui:** as medidas seguem a sintaxe padrão do DAX, mas não foram executadas dentro do Power BI (ele não roda no ambiente automatizado em que o projeto foi construído). Os dados que elas leem foram testados (`tests/test_bi.py`) e os números de referência foram calculados no banco com SQL equivalente; confira cada medida com eles.
+
+Os dados são fictícios e reproduzíveis. Se o banco for recarregado (`python -m almox.carga --recriar` ou `--banco app`), basta **Atualizar** no Power BI. Como o usuário do BI e as permissões são recriados pelo bootstrap e pelas migrações, a conexão continua funcionando.

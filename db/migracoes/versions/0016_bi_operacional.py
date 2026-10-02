@@ -14,6 +14,7 @@ mesmas); as "atuais" medem até agora (o relógio).
   devolução), a finalidade e o prazo (colunas novas só no fim: quem já usa a view não
   quebra);
 - dim_material: ganha o estoque mínimo (de cada controle, numa coluna só);
+- dim_calendario: começa na primeira retirada, se ela for anterior aos 12 meses;
 - fato_posse_atual: cada unidade em posse agora, com quem entregou, prazo e atraso;
 - fato_estoque_atual: os números de core.vw_estoque e o valor disponível;
 - fato_unidade_atual: cada unidade, a situação e há quantos dias está nela (é o que
@@ -32,6 +33,26 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 VIEWS = r"""
+-- Calendário: os 12 meses até a referência OU desde a primeira retirada, o que vier antes.
+-- No banco das análises os dois dão 01/09/2025 (nada muda); no da aplicação a referência
+-- anda com o uso, e sem isto o primeiro mês do histórico ficaria sem data no Power BI.
+CREATE OR REPLACE VIEW bi.dim_calendario AS
+WITH ref AS (
+    SELECT core.data_local(analise.momento_referencia()) AS ultimo_dia,
+           (SELECT core.data_local(min(ocorrida_em)) FROM core.movimentacao
+            WHERE tipo = 'RETIRADA') AS primeira_retirada
+)
+SELECT d::date                                  AS data,
+       extract(year FROM d)::int                AS ano,
+       extract(month FROM d)::int               AS mes,
+       to_char(d, 'YYYY-MM')                    AS ano_mes,
+       extract(quarter FROM d)::int             AS trimestre,
+       extract(isodow FROM d)::int              AS dia_da_semana,  -- 1 = segunda
+       extract(isodow FROM d) < 6               AS dia_util
+FROM ref, generate_series(
+    least(ref.ultimo_dia - 364, coalesce(ref.primeira_retirada, ref.ultimo_dia - 364)),
+    ref.ultimo_dia, interval '1 day') AS d;
+
 CREATE VIEW bi.dim_operador AS
 SELECT u.login, u.perfil, u.ativo, p.posto_graduacao, p.nome_guerra,
        p.posto_graduacao || ' ' || upper(p.nome_guerra) AS operador, p.nome
@@ -129,6 +150,17 @@ $$;
 """
 
 VIEWS_ANTIGAS = r"""
+CREATE OR REPLACE VIEW bi.dim_calendario AS
+WITH ref AS (SELECT core.data_local(analise.momento_referencia()) AS ultimo_dia)
+SELECT d::date                                  AS data,
+       extract(year FROM d)::int                AS ano,
+       extract(month FROM d)::int               AS mes,
+       to_char(d, 'YYYY-MM')                    AS ano_mes,
+       extract(quarter FROM d)::int             AS trimestre,
+       extract(isodow FROM d)::int              AS dia_da_semana,  -- 1 = segunda
+       extract(isodow FROM d) < 6               AS dia_util
+FROM ref, generate_series(ref.ultimo_dia - 364, ref.ultimo_dia, interval '1 day') AS d;
+
 DROP VIEW bi.fato_unidade_atual;
 DROP VIEW bi.fato_estoque_atual;
 DROP VIEW bi.fato_posse_atual;
