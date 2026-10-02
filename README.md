@@ -2,7 +2,7 @@
 
 **Análise de dados do controle de material de uma unidade logística (dados fictícios): carga patrimonial, cautelas, uso de equipamentos e estoque de consumo, com PostgreSQL, SQL analítico, Python (Pandas/NumPy) e Power BI. Mais um sistema web de controle (retirada, devolução, posse, estoque e administração, no computador e no celular) que grava pelas mesmas regras do banco.**
 
-> Projeto 2 do meu portfólio de Dados, na sequência do [Painel de Vendas](https://github.com/DiegoSantiago1/analise-vendas-concessionaria). Dados, análises e sistema concluídos; o modelo do Power BI está pronto e documentado, e a montagem do relatório é a próxima etapa.
+> Projeto 2 do meu portfólio de Dados, na sequência do [Painel de Vendas](https://github.com/DiegoSantiago1/analise-vendas-concessionaria). Dados, análises, sistema e relatório operacional no Power BI concluídos; o relatório analítico (Parte B do guia) é a próxima etapa.
 
 ## O problema
 
@@ -96,7 +96,12 @@ No balcão, quem entrega o material precisa registrar **quem levou o quê, quant
 - **Estoque:** total, disponível, em posse, em manutenção, indisponível e mínimo por material, atualizados a cada movimento, e o painel de cada material com todas as unidades. Estoque negativo é impossível: o banco recusa.
 - **Histórico** com filtros e o **ciclo** de cada atendimento (retirada → posse → devolução, com quem entregou e quem recebeu).
 - **Administração:** materiais e categorias, militares (cadastro, edição, saída da unidade), usuários e permissões (perfil, ativação, senha) e a auditoria de cada alteração.
-- **Sem gráficos na tela**, de propósito: ela é para operar. Análise fica no Power BI (relatório operacional na [Parte A do guia](docs/POWERBI.md)).
+- **Sem gráficos na tela**, de propósito: ela é para operar. Análise fica no Power BI: o [relatório operacional](docs/POWERBI.md) (estoque, movimentações, posse e prazos, equipamentistas, militares e manutenção) lê o mesmo banco.
+
+<p align="center">
+  <img src="docs/img/powerbi_estoque.png" width="49%" alt="Power BI, Estoque agora: cartões e a tabela com a situação de cada material">
+  <img src="docs/img/powerbi_posse.png" width="49%" alt="Power BI, Posse e prazos: material em posse mais atrasado primeiro e posse por setor">
+</p>
 
 **Perfis:** o **equipamentista** opera o balcão (retirada, devolução, posse, estoque, histórico); o **administrador** tem acesso completo; há ainda estoquista (balcão + entradas e ajustes) e consulta (só leitura). A tela esconde o que o perfil não pode, a API responde 403 e, por fim, a função do banco confere o perfil de novo.
 
@@ -134,7 +139,7 @@ As decisões, com contexto, alternativas e o que foi medido, estão em [docs/DEC
 | SQL | CTEs, window functions (`LAG`, `LEAD`, somas acumuladas, `RANK`), *gaps and islands*, `LATERAL` |
 | Python, NumPy, Pandas | gerador de dados, intervalo de Wilson, ponto de reposição, avaliação contra o gabarito, notebooks |
 | Alembic | migrações versionadas com SQL escrito à mão (16 migrações) |
-| Power BI | relatórios operacional e analítico sobre o modelo estrela (guia e tema em `docs/`) |
+| Power BI | relatório operacional como projeto PBIP versionado (modelo em TMDL, páginas em PBIR) e guia do analítico |
 | Node 24, TypeScript, Express 5, `pg` | API do sistema, com SQL escrito à mão |
 | HTML, CSS, JavaScript | tela responsiva, módulos ES por página, sem framework nem etapa de build |
 | pytest, ruff, mypy | testes, lint e tipos (Python) |
@@ -217,10 +222,11 @@ tests/                        574 testes (Python)
 api/                          API Node/TypeScript (rotas por assunto) e 133 testes (node:test)
 web/                          tela (HTML, CSS, JavaScript; uma página por módulo em js/paginas/)
 docs/                         plano, decisões técnicas, guia e tema do Power BI
+powerbi/                      relatório operacional (PBIP: abre no Power BI Desktop)
 ```
 
 ## Limitações e próximos passos
 
-- **Relatório Power BI:** os dois modelos estão prontos, testados e documentados, com números de referência; a montagem do arquivo `.pbix` é a próxima etapa.
+- **Relatório Power BI:** o operacional está montado (`powerbi/`, 6 páginas conferidas com SQL); o analítico tem modelo, medidas e números de referência no guia, e a montagem é a próxima etapa.
 - **Aplicação:** estorno pela tela e devolução feita por outra pessoa (em nome do detentor) ainda não existem; o estorno continua só pela função do banco. O limite de tentativas de login fica na memória de um processo, e a API roda só em `127.0.0.1`, sem HTTPS (para publicar, entraria um proxy com TLS e o cookie `Secure`).
 - Os padrões dos dados foram plantados. As análises foram validadas por conseguirem reencontrá-los, o que mostra que o método funciona, mas não substitui dados reais.

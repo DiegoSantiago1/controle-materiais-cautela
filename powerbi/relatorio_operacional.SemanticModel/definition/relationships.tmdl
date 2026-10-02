@@ -1,0 +1,48 @@
+relationship 36456ab6-da27-5c6d-b676-ac8be7d45638
+	fromColumn: fato_movimentacao.data
+	toColumn: dim_calendario.data
+
+relationship 4f9fdc33-1ec1-51f9-86d3-5ad3038dea86
+	fromColumn: fato_posse_atual.data_retirada
+	toColumn: dim_calendario.data
+
+relationship 7eb9c344-fd17-5448-8726-7b779f7253ab
+	fromColumn: fato_movimentacao.material
+	toColumn: dim_material.codigo
+
+relationship 9863bb17-a63f-504c-a53a-3a3cc06d57a6
+	fromColumn: fato_posse_atual.material
+	toColumn: dim_material.codigo
+
+relationship 153af596-fc7e-51e0-8406-999f7c9c9e19
+	fromColumn: fato_estoque_atual.material
+	toColumn: dim_material.codigo
+
+relationship cca589d5-1420-5750-89fd-2ddfe8f62a59
+	fromColumn: fato_unidade_atual.material
+	toColumn: dim_material.codigo
+
+relationship 18455106-346a-549d-bdb8-c8fe6c7e9da5
+	fromColumn: fato_movimentacao.pessoa
+	toColumn: dim_pessoa.matricula
+
+relationship f54fc59c-a639-5e89-8154-11c6738e02d2
+	fromColumn: fato_posse_atual.pessoa
+	toColumn: dim_pessoa.matricula
+
+relationship cbe6ac9b-1faa-5788-bedf-6d8fd822b23e
+	fromColumn: fato_unidade_atual.pessoa
+	toColumn: dim_pessoa.matricula
+
+relationship 541923c6-82ee-50a9-8eaa-132bdd94db6b
+	fromColumn: fato_movimentacao.executado_por
+	toColumn: dim_operador.login
+
+relationship e4f47b33-1f81-5b12-bdeb-1da55f19922f
+	fromColumn: fato_posse_atual.entregue_por
+	toColumn: dim_operador.login
+
+relationship 89f89bb2-b925-5f69-8365-4ab08485b3a3
+	fromColumn: dim_pessoa.setor
+	toColumn: dim_setor.sigla
+

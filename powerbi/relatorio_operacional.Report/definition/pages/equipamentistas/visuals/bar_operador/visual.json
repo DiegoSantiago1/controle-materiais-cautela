@@ -1,0 +1,111 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "bar_operador",
+  "position": {
+    "x": 16,
+    "y": 80,
+    "z": 2000,
+    "height": 628,
+    "width": 520,
+    "tabOrder": 2000
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_operador"
+                    }
+                  },
+                  "Property": "operador"
+                }
+              },
+              "queryRef": "dim_operador.operador",
+              "nativeQueryRef": "operador",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "Retiradas"
+                }
+              },
+              "queryRef": "Medidas.Retiradas",
+              "nativeQueryRef": "Retiradas",
+              "displayName": "Retiradas"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "Devoluções"
+                }
+              },
+              "queryRef": "Medidas.Devoluções",
+              "nativeQueryRef": "Devoluções",
+              "displayName": "Devoluções"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Medidas"
+                  }
+                },
+                "Property": "Retiradas"
+              }
+            },
+            "direction": "Descending"
+          }
+        ]
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Atendimentos por equipamentista'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

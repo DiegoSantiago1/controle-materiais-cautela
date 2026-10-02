@@ -1,0 +1,96 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "bar_finalidade",
+  "position": {
+    "x": 648,
+    "y": 400,
+    "z": 9000,
+    "height": 308,
+    "width": 616,
+    "tabOrder": 9000
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fato_movimentacao"
+                    }
+                  },
+                  "Property": "finalidade"
+                }
+              },
+              "queryRef": "fato_movimentacao.finalidade",
+              "nativeQueryRef": "finalidade",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "Retiradas por finalidade"
+                }
+              },
+              "queryRef": "Medidas.Retiradas por finalidade",
+              "nativeQueryRef": "Retiradas por finalidade",
+              "displayName": "Retiradas"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Medidas"
+                  }
+                },
+                "Property": "Retiradas por finalidade"
+              }
+            },
+            "direction": "Descending"
+          }
+        ]
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Retiradas por finalidade'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

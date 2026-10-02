@@ -1,0 +1,27 @@
+model Model
+	culture: pt-BR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: pt-BR
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["dim_calendario", "dim_material", "dim_operador", "dim_pessoa", "dim_setor", "fato_estoque_atual", "fato_movimentacao", "fato_posse_atual", "fato_unidade_atual", "Medidas"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table dim_calendario
+ref table dim_material
+ref table dim_operador
+ref table dim_pessoa
+ref table dim_setor
+ref table fato_estoque_atual
+ref table fato_movimentacao
+ref table fato_posse_atual
+ref table fato_unidade_atual
+ref table Medidas
+
+ref cultureInfo pt-BR
+

@@ -1,0 +1,54 @@
+table dim_operador
+	lineageTag: 07ba1687-9e70-53c4-9d72-82443ccdb6b4
+
+	column login
+		dataType: string
+		lineageTag: 035c3e67-917f-5582-b027-1c4f48b57e06
+		summarizeBy: none
+		sourceColumn: login
+
+	column perfil
+		dataType: string
+		lineageTag: 75af81ef-e0f8-57cc-9426-e3bc4b1ff95e
+		summarizeBy: none
+		sourceColumn: perfil
+
+	column ativo
+		dataType: boolean
+		lineageTag: a887e350-8350-5ab6-b7c5-57a5524a5851
+		summarizeBy: none
+		sourceColumn: ativo
+
+	column posto_graduacao
+		dataType: string
+		lineageTag: 4dcd7701-2c8c-586c-8c1d-aa96d7058357
+		summarizeBy: none
+		sourceColumn: posto_graduacao
+
+	column nome_guerra
+		dataType: string
+		lineageTag: 15661f0b-fa3d-5ca9-a5df-7607c0fba826
+		summarizeBy: none
+		sourceColumn: nome_guerra
+
+	column operador
+		dataType: string
+		lineageTag: 124e1613-4d84-509a-83c3-3a45ad522914
+		summarizeBy: none
+		sourceColumn: operador
+
+	column nome
+		dataType: string
+		lineageTag: c1651ca0-64ba-5b36-bd41-ca14c9f4ca65
+		summarizeBy: none
+		sourceColumn: nome
+
+	partition dim_operador = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado_app"),
+				    Tabela = Fonte{[Schema = "bi", Item = "dim_operador"]}[Data]
+				in
+				    Tabela
+

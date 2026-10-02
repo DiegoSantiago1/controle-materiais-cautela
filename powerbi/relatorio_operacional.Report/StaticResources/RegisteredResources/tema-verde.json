@@ -1,0 +1,23 @@
+{
+  "name": "Controle de Materiais e Cautela (verde)",
+  "dataColors": [
+    "#1C6E43",
+    "#3AA56A",
+    "#6B7A3A",
+    "#2563EB",
+    "#B7791F",
+    "#6B7280",
+    "#0D2C1C",
+    "#9BCFAE"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#142019",
+  "tableAccent": "#1C6E43",
+  "good": "#17663D",
+  "neutral": "#B7791F",
+  "bad": "#B4261B",
+  "maximum": "#1C6E43",
+  "center": "#B8E0C7",
+  "minimum": "#F3F5F3",
+  "null": "#CBD5CD"
+}

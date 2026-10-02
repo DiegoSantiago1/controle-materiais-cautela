@@ -1,0 +1,94 @@
+table fato_estoque_atual
+	lineageTag: 5912d818-04c3-58f3-8e2e-1306dfad6af5
+
+	column material
+		dataType: string
+		isHidden
+		lineageTag: f8e2162c-11d9-5592-a0af-b0180c73c631
+		summarizeBy: none
+		sourceColumn: material
+
+	column total
+		dataType: int64
+		formatString: 0
+		lineageTag: b1de2cae-0658-5c09-b2ea-dfae586886a8
+		summarizeBy: none
+		sourceColumn: total
+
+	column disponivel
+		dataType: int64
+		formatString: 0
+		lineageTag: b222abc5-0163-5463-89b8-e7e8ce113530
+		summarizeBy: none
+		sourceColumn: disponivel
+
+	column em_posse
+		dataType: int64
+		formatString: 0
+		lineageTag: dcd7e4af-ecbb-5f3d-a7e0-78bea4353ed1
+		summarizeBy: none
+		sourceColumn: em_posse
+
+	column em_manutencao
+		dataType: int64
+		formatString: 0
+		lineageTag: 8efa904d-50a6-5bbe-a223-7c23600fa79d
+		summarizeBy: none
+		sourceColumn: em_manutencao
+
+	column indisponivel
+		dataType: int64
+		formatString: 0
+		lineageTag: 896e93d9-25b9-5e0b-a313-4bd2dd1588ec
+		summarizeBy: none
+		sourceColumn: indisponivel
+
+	column estoque_minimo
+		dataType: int64
+		formatString: 0
+		lineageTag: 0f30e7ac-4228-5979-b41e-b41e5f0780df
+		summarizeBy: none
+		sourceColumn: estoque_minimo
+
+	column situacao
+		dataType: string
+		lineageTag: ff0bc3b7-6547-5b6d-b701-dd39b6166f3c
+		summarizeBy: none
+		sourceColumn: situacao
+
+	column em_alerta
+		dataType: boolean
+		lineageTag: cfb8b968-6055-5311-8ae3-2fcdc6c677bb
+		summarizeBy: none
+		sourceColumn: em_alerta
+
+	column valor_disponivel
+		dataType: double
+		formatString: #,0.0
+		lineageTag: b7993bea-1579-59d1-94db-d1ca6bf28cb3
+		summarizeBy: none
+		sourceColumn: valor_disponivel
+
+	/// Ordem da situação: o mais grave primeiro.
+	column gravidade = SWITCH ( fato_estoque_atual[situacao], "SEM_ESTOQUE", 1, "CRITICO", 2, "ABAIXO_DO_MINIMO", 3, 4 )
+		dataType: int64
+		isHidden
+		lineageTag: 57930e6c-e470-5a95-a534-7c9065c4a7ef
+		summarizeBy: none
+
+	/// Situação escrita para gente ler.
+	column situacao_texto = SWITCH ( fato_estoque_atual[situacao], "SEM_ESTOQUE", "Sem estoque", "CRITICO", "Crítico", "ABAIXO_DO_MINIMO", "Abaixo do mínimo", "Normal" )
+		dataType: string
+		lineageTag: e4035655-f40c-58df-8c62-dc84c464f817
+		summarizeBy: none
+		sortByColumn: gravidade
+
+	partition fato_estoque_atual = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado_app"),
+				    Tabela = Fonte{[Schema = "bi", Item = "fato_estoque_atual"]}[Data]
+				in
+				    Tabela
+

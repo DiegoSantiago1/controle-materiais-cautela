@@ -1,0 +1,88 @@
+table dim_pessoa
+	lineageTag: a3da5dd0-5eda-508f-8dfc-00bdb45d4544
+
+	column matricula
+		dataType: string
+		lineageTag: a7248589-1775-5a78-bbc7-2501f2bdf4fb
+		summarizeBy: none
+		sourceColumn: matricula
+
+	column nome
+		dataType: string
+		lineageTag: a92260f2-e1d5-5640-852c-ee105f8c2755
+		summarizeBy: none
+		sourceColumn: nome
+
+	column setor
+		dataType: string
+		isHidden
+		lineageTag: d7480446-37b7-5b9f-9095-b1d2233f75f0
+		summarizeBy: none
+		sourceColumn: setor
+
+	column data_entrada
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: 0427fd0e-8e90-57e2-9984-a86db413b17b
+		summarizeBy: none
+		sourceColumn: data_entrada
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column data_saida
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: 2501b26c-a5b9-52db-bd61-c8a5aa060637
+		summarizeBy: none
+		sourceColumn: data_saida
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column na_unidade
+		dataType: boolean
+		lineageTag: 141680e5-ff6c-56cb-a3d2-04682988c049
+		summarizeBy: none
+		sourceColumn: na_unidade
+
+	column posto_graduacao
+		dataType: string
+		lineageTag: c9f53101-0bc6-5a3e-9ffb-55ead912a38a
+		summarizeBy: none
+		sourceColumn: posto_graduacao
+
+	column posto_graduacao_nome
+		dataType: string
+		lineageTag: 0fafa81a-6c78-52d2-a7d7-5f8f392dd60d
+		summarizeBy: none
+		sourceColumn: posto_graduacao_nome
+
+	column posto_ordem
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: e592733c-0153-5b29-9cf6-62d5da4ff6ac
+		summarizeBy: none
+		sourceColumn: posto_ordem
+
+	column nome_guerra
+		dataType: string
+		lineageTag: 404f9f1f-2fb0-57d1-9622-27b78d374a64
+		summarizeBy: none
+		sourceColumn: nome_guerra
+
+	/// Posto e nome de guerra, como o balcão chama o militar.
+	column militar = dim_pessoa[posto_graduacao] & " " & dim_pessoa[nome_guerra]
+		dataType: string
+		lineageTag: 94da1059-5196-554d-b96e-5505dda2c421
+		summarizeBy: none
+		sortByColumn: posto_ordem
+
+	partition dim_pessoa = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado_app"),
+				    Tabela = Fonte{[Schema = "bi", Item = "dim_pessoa"]}[Data]
+				in
+				    Tabela
+

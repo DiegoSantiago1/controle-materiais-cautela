@@ -1,0 +1,122 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "tab_vencida",
+  "position": {
+    "x": 748,
+    "y": 80,
+    "z": 3000,
+    "height": 628,
+    "width": 516,
+    "tabOrder": 3000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_pessoa"
+                    }
+                  },
+                  "Property": "militar"
+                }
+              },
+              "queryRef": "dim_pessoa.militar",
+              "nativeQueryRef": "militar",
+              "displayName": "Militar"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_setor"
+                    }
+                  },
+                  "Property": "nome"
+                }
+              },
+              "queryRef": "dim_setor.nome",
+              "nativeQueryRef": "nome",
+              "displayName": "Setor"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "Em posse agora"
+                }
+              },
+              "queryRef": "Medidas.Em posse agora",
+              "nativeQueryRef": "Em posse agora",
+              "displayName": "Em posse"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "Posse vencida"
+                }
+              },
+              "queryRef": "Medidas.Posse vencida",
+              "nativeQueryRef": "Posse vencida",
+              "displayName": "Vencida"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Medidas"
+                  }
+                },
+                "Property": "Posse vencida"
+              }
+            },
+            "direction": "Descending"
+          }
+        ]
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Material em posse por militar'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

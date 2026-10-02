@@ -1,0 +1,167 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "tab_posse",
+  "position": {
+    "x": 16,
+    "y": 188,
+    "z": 5000,
+    "height": 520,
+    "width": 860,
+    "tabOrder": 5000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_pessoa"
+                    }
+                  },
+                  "Property": "militar"
+                }
+              },
+              "queryRef": "dim_pessoa.militar",
+              "nativeQueryRef": "militar",
+              "displayName": "Militar"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_material"
+                    }
+                  },
+                  "Property": "nome"
+                }
+              },
+              "queryRef": "dim_material.nome",
+              "nativeQueryRef": "nome",
+              "displayName": "Material"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fato_posse_atual"
+                    }
+                  },
+                  "Property": "bmp"
+                }
+              },
+              "queryRef": "fato_posse_atual.bmp",
+              "nativeQueryRef": "bmp",
+              "displayName": "BMP"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fato_posse_atual"
+                    }
+                  },
+                  "Property": "retirada_em"
+                }
+              },
+              "queryRef": "fato_posse_atual.retirada_em",
+              "nativeQueryRef": "retirada_em",
+              "displayName": "Retirada"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fato_posse_atual"
+                    }
+                  },
+                  "Property": "prazo"
+                }
+              },
+              "queryRef": "fato_posse_atual.prazo",
+              "nativeQueryRef": "prazo",
+              "displayName": "Prazo"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fato_posse_atual"
+                    }
+                  },
+                  "Property": "horas_de_atraso"
+                }
+              },
+              "queryRef": "fato_posse_atual.horas_de_atraso",
+              "nativeQueryRef": "horas_de_atraso",
+              "displayName": "Atraso (h)"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_operador"
+                    }
+                  },
+                  "Property": "operador"
+                }
+              },
+              "queryRef": "dim_operador.operador",
+              "nativeQueryRef": "operador",
+              "displayName": "Entregou"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fato_posse_atual"
+                  }
+                },
+                "Property": "horas_de_atraso"
+              }
+            },
+            "direction": "Descending"
+          }
+        ]
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Material em posse (mais atrasado primeiro)'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,101 @@
+table fato_posse_atual
+	lineageTag: 4d2b2e39-02c1-5fc3-80cb-12e8dff68ef8
+
+	column bmp
+		dataType: string
+		lineageTag: efc289ab-1edd-58b0-901e-ef74b42fcd22
+		summarizeBy: none
+		sourceColumn: bmp
+
+	column material
+		dataType: string
+		isHidden
+		lineageTag: c74d4f24-0dea-548c-aa49-5f866fa92bcd
+		summarizeBy: none
+		sourceColumn: material
+
+	column pessoa
+		dataType: string
+		isHidden
+		lineageTag: 66ca6d7f-3373-5d5f-b4d2-bab92ee6bb3a
+		summarizeBy: none
+		sourceColumn: pessoa
+
+	column entregue_por
+		dataType: string
+		isHidden
+		lineageTag: e11c8be0-518e-501b-a78f-e5bcac3d25a0
+		summarizeBy: none
+		sourceColumn: entregue_por
+
+	column data_retirada
+		dataType: dateTime
+		isHidden
+		formatString: dd/mm/yyyy
+		lineageTag: 92ea104b-9ace-5b6a-8717-5e92e1e60bbe
+		summarizeBy: none
+		sourceColumn: data_retirada
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column retirada_em
+		dataType: dateTime
+		formatString: dd/mm/yyyy hh:nn
+		lineageTag: a69251a3-78f6-5b16-9def-6e1dea8118f3
+		summarizeBy: none
+		sourceColumn: retirada_em
+
+	column prazo
+		dataType: dateTime
+		formatString: dd/mm/yyyy hh:nn
+		lineageTag: 6bfb44d3-1a73-5137-92c1-49738df0047c
+		summarizeBy: none
+		sourceColumn: prazo
+
+	column vencida
+		dataType: boolean
+		lineageTag: ded620b2-ab8f-58b6-9a26-b21560f9007c
+		summarizeBy: none
+		sourceColumn: vencida
+
+	column horas_em_posse
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 5fa390cb-9e13-5862-9c3d-5dd3e832a332
+		summarizeBy: none
+		sourceColumn: horas_em_posse
+
+	column horas_de_atraso
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 2b5b37cf-69c3-5d1d-9a85-dcf2427eab69
+		summarizeBy: none
+		sourceColumn: horas_de_atraso
+
+	column operacao
+		dataType: string
+		lineageTag: a500da59-18cb-5875-a676-4b6d7e91de05
+		summarizeBy: none
+		sourceColumn: operacao
+
+	column estado_retirada
+		dataType: string
+		lineageTag: 0085a7c2-f1f4-56ee-ab32-f90357971c09
+		summarizeBy: none
+		sourceColumn: estado_retirada
+
+	column finalidade
+		dataType: string
+		lineageTag: b29cdfdc-36f3-5a02-830e-61527001f121
+		summarizeBy: none
+		sourceColumn: finalidade
+
+	partition fato_posse_atual = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado_app"),
+				    Tabela = Fonte{[Schema = "bi", Item = "fato_posse_atual"]}[Data]
+				in
+				    Tabela
+

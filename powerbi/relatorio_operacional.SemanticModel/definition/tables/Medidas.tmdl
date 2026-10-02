@@ -1,0 +1,113 @@
+table Medidas
+	lineageTag: 686cce64-3b61-5209-a6c9-aaa23d8444e2
+
+	/// Atendimentos de retirada (uma operação pode ter várias unidades).
+	measure Retiradas = CALCULATE ( DISTINCTCOUNT ( fato_movimentacao[operacao] ), fato_movimentacao[tipo] = "RETIRADA" )
+		formatString: #,0
+		lineageTag: ad97eed7-0331-5b6b-8371-5fbb39fae073
+
+	/// Unidades que saíram em retirada.
+	measure 'Unidades retiradas' = CALCULATE ( SUM ( fato_movimentacao[quantidade] ), fato_movimentacao[tipo] = "RETIRADA" )
+		formatString: #,0
+		lineageTag: 7e72863b-8fed-5d49-b35d-2179de20e30d
+
+	/// Atendimentos de devolução.
+	measure Devoluções = CALCULATE ( DISTINCTCOUNT ( fato_movimentacao[operacao] ), fato_movimentacao[tipo] = "DEVOLUCAO" )
+		formatString: #,0
+		lineageTag: db9cc1e7-f065-559e-b0fe-065d332d3b94
+
+	/// Unidades que voltaram.
+	measure 'Unidades devolvidas' = CALCULATE ( SUM ( fato_movimentacao[quantidade] ), fato_movimentacao[tipo] = "DEVOLUCAO" )
+		formatString: #,0
+		lineageTag: bc92dcc4-8578-59c3-b2de-39eb8e8f1972
+
+	/// Unidades incorporadas ao estoque.
+	measure 'Entradas (unidades)' = CALCULATE ( SUM ( fato_movimentacao[quantidade] ), fato_movimentacao[tipo] = "ENTRADA" )
+		formatString: #,0
+		lineageTag: a35eb2fa-3f49-5b73-aa76-d5b6f8f2df45
+
+	/// Unidades devolvidas avariadas ou inservíveis.
+	measure 'Devolvidas com avaria' = CALCULATE ( COUNTROWS ( fato_movimentacao ), fato_movimentacao[estado_devolucao] IN { "AVARIADO", "INSERVIVEL" } )
+		formatString: #,0
+		lineageTag: d4741486-3e71-5d68-83ca-c6ec5d1ae532
+
+	/// Parte das unidades devolvidas que voltou avariada ou inservível.
+	measure '% de avaria' = DIVIDE ( [Devolvidas com avaria], [Unidades devolvidas] )
+		formatString: 0.00%
+		lineageTag: f3870cb4-2a93-5224-9a4c-a1ea1c4b2bb4
+
+	/// Retiradas com finalidade informada (o histórico antigo não tinha finalidade).
+	measure 'Retiradas por finalidade' = CALCULATE ( [Retiradas], KEEPFILTERS ( NOT ISBLANK ( fato_movimentacao[finalidade] ) ) )
+		formatString: #,0
+		lineageTag: 72325414-6902-5b4f-bfe3-6d8d8a5047c0
+
+	/// Unidades retiradas só para os 10 materiais mais retirados no filtro.
+	measure 'Unidades retiradas (top 10 materiais)' = IF ( RANKX ( ALLSELECTED ( dim_material[nome] ), [Unidades retiradas] ) <= 10, [Unidades retiradas] )
+		formatString: #,0
+		lineageTag: b9f1c48a-c3be-527e-a559-0691a70d54b4
+
+	/// Unidades retiradas só para os 15 militares que mais retiraram no filtro.
+	measure 'Unidades retiradas (top 15 militares)' = IF ( RANKX ( ALLSELECTED ( dim_pessoa[militar], dim_pessoa[posto_ordem] ), [Unidades retiradas] ) <= 15, [Unidades retiradas] )
+		formatString: #,0
+		lineageTag: 137fe4e0-7729-5f9e-96ff-ce2eb62cff75
+
+	/// Unidades com algum militar neste momento.
+	measure 'Em posse agora' = COUNTROWS ( fato_posse_atual )
+		formatString: #,0
+		lineageTag: e177eb90-a3fd-53e3-a16e-8071ac7ba91b
+
+	/// Unidades em posse com o prazo de devolução vencido.
+	measure 'Posse vencida' = CALCULATE ( COUNTROWS ( fato_posse_atual ), fato_posse_atual[vencida] = TRUE () )
+		formatString: #,0
+		lineageTag: e9bf3be1-bcd6-5fb1-bebb-8902f1973d48
+
+	/// Militares com pelo menos uma unidade em posse.
+	measure 'Militares com material' = DISTINCTCOUNT ( fato_posse_atual[pessoa] )
+		formatString: #,0
+		lineageTag: b6d7d11f-e332-5c35-83af-0e51896f5ddd
+
+	/// Média de horas de atraso das posses vencidas.
+	measure 'Atraso médio (h)' = CALCULATE ( AVERAGE ( fato_posse_atual[horas_de_atraso] ), fato_posse_atual[vencida] = TRUE () )
+		formatString: #,0.0
+		lineageTag: b8c8431b-4602-5c24-b87d-b4c8bfe84e04
+
+	/// Unidades disponíveis agora.
+	measure Disponível = SUM ( fato_estoque_atual[disponivel] )
+		formatString: #,0
+		lineageTag: 0c9a438b-833e-555d-b3b3-f1fb4d8b2d18
+
+	/// Unidades em manutenção agora.
+	measure 'Em manutenção' = SUM ( fato_estoque_atual[em_manutencao] )
+		formatString: #,0
+		lineageTag: c4b61696-a3f4-57d9-a9b2-4ed5c18e4bde
+
+	/// Materiais sem estoque, críticos ou abaixo do mínimo.
+	measure 'Materiais em alerta' = CALCULATE ( COUNTROWS ( fato_estoque_atual ), fato_estoque_atual[em_alerta] = TRUE () )
+		formatString: #,0
+		lineageTag: 457fe58d-0391-5f2b-a50f-8df2d138b677
+
+	/// Valor fictício das unidades disponíveis.
+	measure 'Valor disponível' = SUM ( fato_estoque_atual[valor_disponivel] )
+		formatString: R\$ #,0
+		lineageTag: b4791a83-50a1-5d67-b5dc-39442e3e4fdc
+
+	/// Há quantos dias, em média, as unidades em manutenção estão paradas.
+	measure 'Dias médios em manutenção' = CALCULATE ( AVERAGE ( fato_unidade_atual[dias_na_situacao] ), fato_unidade_atual[status] = "EM_MANUTENCAO" )
+		formatString: #,0.0
+		lineageTag: 6059b7bc-f94b-5c0e-bf00-850b763b2882
+
+	/// Cor de fundo da situação na tabela de estoque (vermelho e âmbar só para problema).
+	measure 'Cor da situação' = SWITCH ( SELECTEDVALUE ( fato_estoque_atual[situacao] ), "SEM_ESTOQUE", "#F6D5D2", "CRITICO", "#F6D5D2", "ABAIXO_DO_MINIMO", "#FBE8C8" )
+		lineageTag: 8079aaea-666a-5883-bfe1-8ac3ce83aabe
+
+	column Coluna
+		dataType: string
+		isHidden
+		lineageTag: 8104e9f5-c2c8-58b4-8c9c-abb219816f36
+		summarizeBy: none
+		sourceColumn: Coluna
+
+	partition Medidas = m
+		mode: import
+		source = #table(type table [Coluna = text], {})
+

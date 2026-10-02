@@ -1,0 +1,165 @@
+table fato_movimentacao
+	lineageTag: a0dddafa-ca5e-5b74-ace7-9a177f13b9ff
+
+	column id
+		dataType: int64
+		formatString: 0
+		lineageTag: 199e359b-71c2-58ac-8120-6d85dd6f8c50
+		summarizeBy: none
+		sourceColumn: id
+
+	column data
+		dataType: dateTime
+		isHidden
+		formatString: dd/mm/yyyy
+		lineageTag: cc68e33a-cf76-523c-8850-ec93a7fb268b
+		summarizeBy: none
+		sourceColumn: data
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column ocorrida_em
+		dataType: dateTime
+		formatString: dd/mm/yyyy hh:nn
+		lineageTag: 46bad08a-6e3d-5f5c-9c8b-ad420c00be73
+		summarizeBy: none
+		sourceColumn: ocorrida_em
+
+	column tipo
+		dataType: string
+		lineageTag: 194bcc64-5860-5f9d-bf5c-12d003601975
+		summarizeBy: none
+		sourceColumn: tipo
+
+	column material
+		dataType: string
+		isHidden
+		lineageTag: ac96bef8-1e3e-5b77-b2cf-6dc0bc054534
+		summarizeBy: none
+		sourceColumn: material
+
+	column bmp
+		dataType: string
+		lineageTag: c473c2e8-f417-59a5-aa10-bd68d035b3e8
+		summarizeBy: none
+		sourceColumn: bmp
+
+	column pessoa
+		dataType: string
+		isHidden
+		lineageTag: 688207f3-76f7-5d2e-b1c7-74ffaaa9a9c0
+		summarizeBy: none
+		sourceColumn: pessoa
+
+	column executado_por
+		dataType: string
+		isHidden
+		lineageTag: 3f6dd4c9-9a7c-5f99-8b53-cf3b55283464
+		summarizeBy: none
+		sourceColumn: executado_por
+
+	column perfil_de_quem_executou
+		dataType: string
+		lineageTag: bd55d94d-e0a2-5ebc-b74a-72263f62972c
+		summarizeBy: none
+		sourceColumn: perfil_de_quem_executou
+
+	column setor_destino
+		dataType: string
+		lineageTag: e7e6827e-080e-55d6-bbb7-77802e81e843
+		summarizeBy: none
+		sourceColumn: setor_destino
+
+	column quantidade
+		dataType: int64
+		formatString: 0
+		lineageTag: c0631fb9-becf-550b-92e1-5c2536dee02c
+		summarizeBy: sum
+		sourceColumn: quantidade
+
+	column variacao
+		dataType: int64
+		formatString: 0
+		lineageTag: cd76afea-65b7-58e5-ae37-42bf5aa2f9cb
+		summarizeBy: none
+		sourceColumn: variacao
+
+	column saldo_antes
+		dataType: int64
+		formatString: 0
+		lineageTag: 6274b63a-c1aa-54d9-a80a-b1098dc4313c
+		summarizeBy: none
+		sourceColumn: saldo_antes
+
+	column saldo_depois
+		dataType: int64
+		formatString: 0
+		lineageTag: 55bae982-bfd7-52a8-9d00-43081c0c5d8a
+		summarizeBy: none
+		sourceColumn: saldo_depois
+
+	column status_anterior
+		dataType: string
+		lineageTag: 37f76243-e658-5370-992a-5ad29dc179e7
+		summarizeBy: none
+		sourceColumn: status_anterior
+
+	column status_novo
+		dataType: string
+		lineageTag: 9aea1e89-fc57-5c1a-bcfb-d155fca60f5b
+		summarizeBy: none
+		sourceColumn: status_novo
+
+	column e_estorno
+		dataType: boolean
+		lineageTag: 87dee9d4-3f7d-5448-9a1e-51624b8fa0fc
+		summarizeBy: none
+		sourceColumn: e_estorno
+
+	column operacao
+		dataType: string
+		lineageTag: b180e2be-d1f1-532e-be0e-2d22d6748083
+		summarizeBy: none
+		sourceColumn: operacao
+
+	column estado_retirada
+		dataType: string
+		lineageTag: 1a86640c-dbc7-5473-82d8-0d9daeaa7fad
+		summarizeBy: none
+		sourceColumn: estado_retirada
+
+	column estado_devolucao
+		dataType: string
+		lineageTag: 1f6f551a-5bd8-5a84-91ee-608200423c5b
+		summarizeBy: none
+		sourceColumn: estado_devolucao
+
+	column finalidade
+		dataType: string
+		lineageTag: edeabdf1-bfd4-5063-8800-6f24897a5d86
+		summarizeBy: none
+		sourceColumn: finalidade
+
+	column prazo_devolucao
+		dataType: dateTime
+		formatString: dd/mm/yyyy hh:nn
+		lineageTag: d8ac993e-f91c-5c92-b033-b237f2db2454
+		summarizeBy: none
+		sourceColumn: prazo_devolucao
+
+	column hora
+		dataType: int64
+		formatString: 0
+		lineageTag: e348288c-64d4-5313-ae7a-c98a9b0ff629
+		summarizeBy: none
+		sourceColumn: hora
+
+	partition fato_movimentacao = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado_app"),
+				    Tabela = Fonte{[Schema = "bi", Item = "fato_movimentacao"]}[Data]
+				in
+				    Tabela
+

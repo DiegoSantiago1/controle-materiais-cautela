@@ -247,3 +247,13 @@ aplicada sobre a demanda do mês de pico, deixou a maioria dos bem calibrados se
 **Por quê sem React.** O argumento da D22 continua: React entra nos projetos 4 e 5. Aqui as páginas são formulários, tabelas e listas, que o DOM resolve bem com uma função `el()` de 20 linhas, e não há etapa de build para manter.
 
 **Verificação.** Os fluxos de balcão (retirada com dois materiais por quantidade e um por BMP, devolução avariada, painel do estoque, ciclo) e de administração (categoria, subcategoria duplicada, material com `<img onerror>` no nome, entrada de unidades, militar, usuário, troca de perfil derrubando a sessão do outro) foram percorridos no Chromium em 1440×900 e 390×844, sem erro de console além das respostas 4xx provocadas de propósito. A verificação encontrou e corrigiu: contagem de vencidas diferente entre o menu (unidades) e a página (atendimentos), botões empilhando nas tabelas, campo de formulário esticado pelo vizinho e a sombra do link "pular para o conteúdo" aparecendo no topo.
+
+## D29. Relatório do Power BI como projeto PBIP, e não `.pbix`
+
+**Contexto.** O `.pbix` é um arquivo binário: no git, cada mudança aparece como "arquivo alterado", sem dizer o quê, e ele carrega uma cópia dos dados.
+
+**Decisão.** O relatório operacional fica em `powerbi/` no formato de projeto do Power BI (PBIP): o modelo em TMDL (uma tabela por arquivo, com colunas, relacionamentos, medidas DAX e as descrições de cada medida) e as páginas em PBIR (um JSON por visual). O cache com os dados (`.pbi/cache.abf`) e as configurações locais ficam fora do git; a senha nunca entra no projeto (o Power BI guarda a credencial no perfil do Windows).
+
+**Por quê.** Uma medida corrigida aparece no `git diff` como uma linha de DAX, revisável como qualquer código; quem clona o repositório abre o relatório e atualiza contra o próprio banco; o repositório não carrega dados.
+
+**Verificação.** Aberto e atualizado no Power BI Desktop 2.158 (set/2026); cada cartão conferido com SQL equivalente no banco. A conferência achou três erros de DAX, corrigidos e explicados no guia: filtro de `finalidade` sem `KEEPFILTERS` (todas as barras com o total), `RANKX` que ignorava a coluna de ordenação do militar (top 15 com mais de 15) e empate com `Dense` (top 10 com 11).

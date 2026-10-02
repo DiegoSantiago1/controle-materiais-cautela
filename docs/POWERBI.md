@@ -9,6 +9,10 @@ O banco já entrega os dados prontos para o Power BI no schema `bi` (modelo estr
 
 O sistema web não tem gráficos de propósito: a tela é para operar (retirar, devolver, conferir). Análise e acompanhamento ficam no Power BI.
 
+**O relatório operacional já está montado** em [`powerbi/relatorio_operacional.pbip`](../powerbi/), no formato de projeto do Power BI (PBIP): o modelo fica em texto (TMDL, uma tabela por arquivo, com as medidas e as descrições) e as páginas em JSON (PBIR, um arquivo por visual). Assim cada mudança no relatório aparece no `git diff` como qualquer código. Para abrir: Docker Desktop aberto, duplo clique no `.pbip`, **Atualizar agora** e as credenciais abaixo (só na primeira vez). O arquivo não guarda dados nem senha: os dados vêm do banco a cada atualização (o cache local `.pbi/` é ignorado pelo git).
+
+<p align="center"><img src="img/powerbi_estoque.png" width="49%" alt="Página Estoque agora"> <img src="img/powerbi_movimentacoes.png" width="49%" alt="Página Movimentações"></p>
+
 ## Conexão (somente leitura, vale para os dois)
 
 O Power BI conecta com um usuário **que só lê**: o `almox_bi` (nome e senha no `.env`, variáveis `ALMOX_BI_USER` e `ALMOX_BI_PASSWORD`). Ele enxerga os schemas `bi`, `analise` e `dq`. **Não** enxerga as tabelas do `core`, a auditoria, o `staging`, nem as senhas e sessões do schema `app`, e não consegue gravar nada: isso é testado em `tests/test_bi.py`.
@@ -106,6 +110,24 @@ Dias médios em manutenção =
 CALCULATE ( AVERAGE ( fato_unidade_atual[dias_na_situacao] ), fato_unidade_atual[status] = "EM_MANUTENCAO" )
 ```
 As medidas "atuais" são uma fotografia de agora: não use `dim_calendario` como filtro nelas (a data da foto é a de hoje).
+
+O relatório pronto tem mais três medidas, e duas delas nasceram de erros que a verificação encontrou:
+
+```dax
+Retiradas por finalidade = CALCULATE ( [Retiradas], KEEPFILTERS ( NOT ISBLANK ( fato_movimentacao[finalidade] ) ) )
+```
+Sem `KEEPFILTERS`, a condição sobre `finalidade` **substitui** o filtro que cada barra do gráfico põe na mesma coluna, e todas as barras mostravam o total. Com `KEEPFILTERS`, ela é **somada** ao filtro da barra: cada finalidade mostra a sua contagem e o histórico antigo (sem finalidade) some do gráfico.
+
+```dax
+Unidades retiradas (top 10 materiais) =
+IF ( RANKX ( ALLSELECTED ( dim_material[nome] ), [Unidades retiradas] ) <= 10, [Unidades retiradas] )
+
+Unidades retiradas (top 15 militares) =
+IF ( RANKX ( ALLSELECTED ( dim_pessoa[militar], dim_pessoa[posto_ordem] ), [Unidades retiradas] ) <= 15, [Unidades retiradas] )
+```
+`RANKX` dá a posição de cada item entre os que estão no filtro; fora do top, a medida devolve vazio e a barra não aparece. Dois cuidados: (1) a coluna `militar` é ordenada por `posto_ordem` ("Ordenar por coluna"), e o Power BI agrupa pelas duas; sem `posto_ordem` no `ALLSELECTED`, o ranking era feito **dentro de cada posto** e o "top 15" mostrava mais de 15; (2) empate: com `Dense`, dois materiais empatados com 435 unidades ocupavam a mesma posição e entravam 11; o padrão (`Skip`) pula a posição seguinte.
+
+`Cor da situação` devolve a cor de fundo da coluna Situação (formatação condicional pelo valor do campo), e as colunas calculadas `situacao_texto` e `gravidade` deixam a situação legível e ordenada do mais grave para o normal.
 
 ### A.4 Páginas sugeridas
 
@@ -239,6 +261,6 @@ Os notebooks (`notebooks/0*.ipynb`) têm os números de referência para conferi
 
 ## Verificação e atualização
 
-> **Não verificado aqui:** as medidas seguem a sintaxe padrão do DAX, mas não foram executadas dentro do Power BI (ele não roda no ambiente automatizado em que o projeto foi construído). Os dados que elas leem foram testados (`tests/test_bi.py`) e os números de referência foram calculados no banco com SQL equivalente; confira cada medida com eles.
+> **Parte A verificada no Power BI Desktop (2.158, set/2026):** o projeto `powerbi/relatorio_operacional.pbip` foi aberto, atualizado contra o `almoxarifado_app` e cada cartão conferido com SQL equivalente no banco (disponível, valor, retiradas, unidades, devoluções, % de avaria, posse vencida, dias em manutenção, retiradas por finalidade e o top 10). **Parte B ainda não verificada no Power BI:** as medidas seguem a sintaxe padrão do DAX e os números de referência foram calculados com SQL; confira cada medida com eles.
 
 Os dados são fictícios e reproduzíveis. Se o banco for recarregado (`python -m almox.carga --recriar` ou `--banco app`), basta **Atualizar** no Power BI. Como o usuário do BI e as permissões são recriados pelo bootstrap e pelas migrações, a conexão continua funcionando.

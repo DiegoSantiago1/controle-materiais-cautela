@@ -1,0 +1,231 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "tab_estoque",
+  "position": {
+    "x": 268,
+    "y": 188,
+    "z": 7000,
+    "height": 520,
+    "width": 996,
+    "tabOrder": 7000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_material"
+                    }
+                  },
+                  "Property": "categoria"
+                }
+              },
+              "queryRef": "dim_material.categoria",
+              "nativeQueryRef": "categoria",
+              "displayName": "Categoria"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_material"
+                    }
+                  },
+                  "Property": "nome"
+                }
+              },
+              "queryRef": "dim_material.nome",
+              "nativeQueryRef": "nome",
+              "displayName": "Material"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fato_estoque_atual"
+                    }
+                  },
+                  "Property": "total"
+                }
+              },
+              "queryRef": "fato_estoque_atual.total",
+              "nativeQueryRef": "total",
+              "displayName": "Total"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fato_estoque_atual"
+                    }
+                  },
+                  "Property": "disponivel"
+                }
+              },
+              "queryRef": "fato_estoque_atual.disponivel",
+              "nativeQueryRef": "disponivel",
+              "displayName": "Disponível"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fato_estoque_atual"
+                    }
+                  },
+                  "Property": "em_posse"
+                }
+              },
+              "queryRef": "fato_estoque_atual.em_posse",
+              "nativeQueryRef": "em_posse",
+              "displayName": "Em posse"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fato_estoque_atual"
+                    }
+                  },
+                  "Property": "em_manutencao"
+                }
+              },
+              "queryRef": "fato_estoque_atual.em_manutencao",
+              "nativeQueryRef": "em_manutencao",
+              "displayName": "Manutenção"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fato_estoque_atual"
+                    }
+                  },
+                  "Property": "indisponivel"
+                }
+              },
+              "queryRef": "fato_estoque_atual.indisponivel",
+              "nativeQueryRef": "indisponivel",
+              "displayName": "Indisponível"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fato_estoque_atual"
+                    }
+                  },
+                  "Property": "estoque_minimo"
+                }
+              },
+              "queryRef": "fato_estoque_atual.estoque_minimo",
+              "nativeQueryRef": "estoque_minimo",
+              "displayName": "Mínimo"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fato_estoque_atual"
+                    }
+                  },
+                  "Property": "situacao_texto"
+                }
+              },
+              "queryRef": "fato_estoque_atual.situacao_texto",
+              "nativeQueryRef": "situacao_texto",
+              "displayName": "Situação"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fato_estoque_atual"
+                  }
+                },
+                "Property": "situacao_texto"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ]
+      }
+    },
+    "objects": {
+      "values": [
+        {
+          "properties": {
+            "backColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Measure": {
+                      "Expression": {
+                        "SourceRef": {
+                          "Entity": "Medidas"
+                        }
+                      },
+                      "Property": "Cor da situação"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "dataViewWildcard": {
+                  "matchingOption": 1
+                }
+              }
+            ],
+            "metadata": "fato_estoque_atual.situacao_texto"
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Estoque por material'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

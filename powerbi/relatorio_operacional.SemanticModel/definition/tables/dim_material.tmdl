@@ -1,0 +1,75 @@
+table dim_material
+	lineageTag: 02bf010d-f1ea-5952-907c-610138ba514f
+
+	column codigo
+		dataType: string
+		lineageTag: f756edc7-318e-514a-bb09-294541d5852a
+		summarizeBy: none
+		sourceColumn: codigo
+
+	column nome
+		dataType: string
+		lineageTag: b5e0a561-217c-57cb-910c-4b031955c300
+		summarizeBy: none
+		sourceColumn: nome
+
+	column categoria
+		dataType: string
+		lineageTag: dc97e22c-97e9-5679-b829-a481cf4dd0cc
+		summarizeBy: none
+		sourceColumn: categoria
+
+	column subcategoria
+		dataType: string
+		lineageTag: c873d8b2-e923-5263-94d5-2c5e34dc56ff
+		summarizeBy: none
+		sourceColumn: subcategoria
+
+	column controle
+		dataType: string
+		lineageTag: 28a858f6-f0e5-5361-bb2c-080ffbfc1c6c
+		summarizeBy: none
+		sourceColumn: controle
+
+	column unidade_medida
+		dataType: string
+		lineageTag: 2cc24e0f-a0a9-5aeb-99ab-a423bd556bae
+		summarizeBy: none
+		sourceColumn: unidade_medida
+
+	column prazo_devolucao_horas
+		dataType: int64
+		formatString: 0
+		lineageTag: ff88b9af-aa3a-5304-a652-790dd22d0472
+		summarizeBy: none
+		sourceColumn: prazo_devolucao_horas
+
+	column custo_unitario
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 5a477c5f-0a8b-58a9-b446-0f151659269c
+		summarizeBy: sum
+		sourceColumn: custo_unitario
+
+	column ativo
+		dataType: boolean
+		lineageTag: 17356b4c-77cb-5a6d-bf46-83e9884de8bf
+		summarizeBy: none
+		sourceColumn: ativo
+
+	column estoque_minimo
+		dataType: int64
+		formatString: 0
+		lineageTag: ae737c0f-22ca-5d32-aad4-0006ce4a3340
+		summarizeBy: none
+		sourceColumn: estoque_minimo
+
+	partition dim_material = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado_app"),
+				    Tabela = Fonte{[Schema = "bi", Item = "dim_material"]}[Data]
+				in
+				    Tabela
+
