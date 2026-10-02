@@ -23,7 +23,7 @@ export async function posseAgrupada(
   const { rows } = await pool.query(
     `SELECT v.pessoa_id, v.posto_graduacao AS posto, v.nome_guerra, v.nome, v.matricula,
             v.setor, v.material_tipo_id, v.codigo, v.material, v.categoria, v.operacao,
-            min(v.retirada_em) AS retirada_em, min(v.prazo) AS prazo,
+            min(v.retirada_em) AS retirada_em, min(v.prazo) AS prazo, min(v.retirada_id) AS retirada_id,
             min(v.prazo) < now() AS vencida,
             v.entregue_por_posto, v.entregue_por_guerra,
             max(v.estado_retirada) AS estado_retirada, max(v.observacao) AS observacao,
@@ -167,7 +167,9 @@ export function rotasDeConsulta(dep: Dependencias): Router {
                AS em_posse,
            (SELECT count(DISTINCT detentor_id) FROM core.unidade_patrimonial
             WHERE status = 'CAUTELADA')::integer AS militares_com_material,
-           (SELECT count(*) FROM core.vw_posse WHERE prazo < now())::integer AS vencidas,
+           (SELECT count(DISTINCT (pessoa_id, material_tipo_id,
+                                  coalesce(operacao::text, retirada_id::text)))
+            FROM core.vw_posse WHERE prazo < now())::integer AS vencidas,
            (SELECT count(*) FROM core.vw_estoque
             WHERE ativo AND situacao <> 'NORMAL')::integer AS abaixo_do_minimo,
            (SELECT count(*) FROM core.unidade_patrimonial
