@@ -158,7 +158,7 @@ def test_funcoes_de_escrita_tem_search_path_fixo(api: Conexao) -> None:
         ORDER BY 1
         """
     ).fetchall()
-    assert len(linhas) == 9
+    assert len(linhas) == 11  # as 9 de movimentação + retirada e devolução em lote
     assert all(config == ["search_path=pg_catalog, pg_temp"] for _, config in linhas)
 
 
