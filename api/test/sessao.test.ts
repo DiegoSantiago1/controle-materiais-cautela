@@ -21,7 +21,9 @@ describe("login", () => {
       "id",
       "login",
       "nome",
+      "nome_guerra",
       "perfil",
+      "posto",
     ]);
     assert.equal((r.corpo.usuario as { perfil: string }).perfil, "EQUIPAMENTISTA");
 
@@ -114,7 +116,7 @@ describe("sessão", () => {
       const cliente = new Cliente(amb.url);
       cliente.cookie = cookie;
       assert.deepEqual((await cliente.pedir("GET", "/api/sessao")).corpo, { usuario: null });
-      assert.equal((await cliente.pedir("GET", "/api/cautelas")).status, 401);
+      assert.equal((await cliente.pedir("GET", "/api/posse")).status, 401);
     }
   });
 
@@ -126,7 +128,7 @@ describe("sessão", () => {
     assert.equal(saida.status, 204);
     const copia = new Cliente(amb.url);
     copia.cookie = antigo;
-    assert.equal((await copia.pedir("GET", "/api/cautelas")).status, 401);
+    assert.equal((await copia.pedir("GET", "/api/posse")).status, 401);
     assert.deepEqual((await copia.pedir("GET", "/api/sessao")).corpo, { usuario: null });
   });
 
@@ -139,19 +141,19 @@ describe("sessão", () => {
        WHERE token_hash = $1`,
       [createHash("sha256").update(token).digest()],
     );
-    assert.equal((await cliente.pedir("GET", "/api/cautelas")).status, 401);
+    assert.equal((await cliente.pedir("GET", "/api/posse")).status, 401);
     assert.deepEqual((await cliente.pedir("GET", "/api/sessao")).corpo, { usuario: null });
   });
 
   test("usuário desativado perde o acesso na hora, com a sessão aberta", async () => {
     const { equipamentista } = amb.cenario; // o consulta ficou bloqueado pela força bruta
     const cliente = await entrarComo(amb.url, equipamentista.login);
-    assert.equal((await cliente.pedir("GET", "/api/cautelas")).status, 200);
+    assert.equal((await cliente.pedir("GET", "/api/posse")).status, 200);
     await amb.dono.query("UPDATE core.usuario SET ativo = false WHERE id = $1", [
       equipamentista.id,
     ]);
     try {
-      assert.equal((await cliente.pedir("GET", "/api/cautelas")).status, 401);
+      assert.equal((await cliente.pedir("GET", "/api/posse")).status, 401);
     } finally {
       await amb.dono.query("UPDATE core.usuario SET ativo = true WHERE id = $1", [
         equipamentista.id,

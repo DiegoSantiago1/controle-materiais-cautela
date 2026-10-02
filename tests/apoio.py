@@ -1,5 +1,7 @@
 """Funções de apoio usadas pelos testes e pelas fixtures."""
 
+import hashlib
+import secrets
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -51,3 +53,15 @@ class CargaPadrao:
     linhas_planilha: int
     resultado: dict[str, float]
     manifesto: dict[str, object]
+
+
+def abrir_sessao(con: Conexao, usuario: int, validade: str = "1 hour") -> bytes:
+    """Grava uma sessão (como o login da API faria) e devolve o hash do token, que é o que
+    as funções app.* recebem. Validade negativa ('-1 hour') cria uma sessão já vencida."""
+    token_hash = hashlib.sha256(secrets.token_bytes(32)).digest()
+    con.execute(
+        "INSERT INTO app.sessao (token_hash, usuario_id, criada_em, expira_em) "
+        "VALUES (%s, %s, now() - interval '2 hours', now() + %s::interval)",
+        [token_hash, usuario, validade],
+    )
+    return token_hash

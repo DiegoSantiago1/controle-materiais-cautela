@@ -8,7 +8,7 @@ import type pg from "pg";
 import { PASTA_WEB } from "./config.ts";
 import { ErroHttp, traduzirErroDoBanco } from "./erros.ts";
 import { LimiteDeTentativas } from "./limite.ts";
-import { criarRotas } from "./rotas.ts";
+import { criarRotas } from "./rotas/index.ts";
 
 export interface OpcoesApp {
   pool: pg.Pool;

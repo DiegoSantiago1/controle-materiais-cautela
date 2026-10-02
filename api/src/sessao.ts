@@ -21,11 +21,14 @@ export interface UsuarioDaSessao {
   login: string;
   perfil: string;
   nome: string;
+  posto: string;
+  nome_guerra: string;
 }
 
 const TOKEN = /^[A-Za-z0-9_-]{43}$/; // 32 bytes em base64url, sem preenchimento
 
-function hashDoToken(token: string): Buffer {
+/** O banco guarda e as funções app.* recebem só este hash, nunca o token. */
+export function hashDoToken(token: string): Buffer {
   return createHash("sha256").update(token).digest();
 }
 
@@ -48,7 +51,7 @@ export async function buscarSessao(
   if (token === undefined || !TOKEN.test(token)) return undefined;
   // Usuário desativado perde o acesso na hora, mesmo com sessão aberta.
   const { rows } = await pool.query<UsuarioDaSessao>(
-    `SELECT u.id, u.login, u.perfil, p.nome
+    `SELECT u.id, u.login, u.perfil, p.nome, p.posto_graduacao AS posto, p.nome_guerra
      FROM app.sessao s
      JOIN core.usuario u ON u.id = s.usuario_id
      JOIN core.pessoa p ON p.id = u.pessoa_id

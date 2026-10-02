@@ -25,11 +25,18 @@ export const MAX_FALHAS_LOGIN = 3;
 export interface Cenario {
   sufixo: string;
   material: string; // nome do material, com acento ("Rádio de teste ...")
+  materialId: number;
   unidades: { id: number; bmp: string }[];
+  consumo: { id: number; saldo: number }; // material de consumo com saldo
+  local: number;
+  setor: number;
+  categoria: number;
+  subcategoria: number;
   pessoa: number; // na unidade
   pessoa2: number; // na unidade
   transferida: number; // saiu da unidade
   equipamentista: { id: number; login: string };
+  admin: { id: number; login: string };
   consulta: { id: number; login: string };
   inativo: { id: number; login: string };
   estoquista: number;
@@ -133,7 +140,7 @@ async function criarCenario(dono: pg.Pool): Promise<Cenario> {
     ),
   );
   const unidades: { id: number; bmp: string }[] = [];
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 24; i++) {
     // O BMP é sorteado dentro da tentativa: numa colisão, a nova tentativa usa outro.
     const unidade = await unico(async () => {
       const bmp = `7${digitos(6)}`;
@@ -149,14 +156,41 @@ async function criarCenario(dono: pg.Pool): Promise<Cenario> {
     unidades.push(unidade);
   }
 
+  const consumo = await unico(() =>
+    inserir(
+      dono,
+      `INSERT INTO core.material_tipo (codigo, nome, subcategoria_id, unidade_medida, controle,
+                                       custo_unitario)
+       VALUES ($1, $2, $3, 'PCT', 'CONSUMO', 5) RETURNING id`,
+      [`${letras(3)}-${digitos(4)}`, `Pilha de teste ${sufixo}`, subcategoria],
+    ),
+  );
+  await dono.query(`SELECT core.cadastrar_saldo_consumo($1, $2, 10, 500, $3)`, [
+    consumo,
+    local,
+    estoquista.id,
+  ]);
+  await dono.query(
+    `SELECT core.registrar_entrada_consumo(p_material_tipo_id => $1, p_quantidade => 50,
+         p_executado_por => $2, p_ocorrida_em => now() - interval '1 day')`,
+    [consumo, estoquista.id],
+  );
+
   return {
     sufixo,
     material,
+    materialId,
     unidades,
+    consumo: { id: consumo, saldo: 50 },
+    local,
+    setor,
+    categoria,
+    subcategoria,
     pessoa: await pessoa(`Maria Recebedora ${sufixo}`),
     pessoa2: await pessoa(`João Recebedor ${sufixo}`),
     transferida: await pessoa(`Pessoa Transferida ${sufixo}`, "2025-06-30"),
     equipamentista: await usuario("EQUIPAMENTISTA", "equip"),
+    admin: await usuario("ADMINISTRADOR", "admin"),
     consulta: await usuario("CONSULTA", "consulta"),
     inativo: await usuario("EQUIPAMENTISTA", "inativo", false),
     estoquista: estoquista.id,

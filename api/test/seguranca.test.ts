@@ -30,7 +30,10 @@ test("pedido que altera algo, vindo de outra origem → 403", async () => {
   const r = await cliente.pedir(
     "POST",
     "/api/retiradas",
-    { unidade_id: amb.cenario.unidades[0]?.id, pessoa_id: amb.cenario.pessoa },
+    {
+      pessoa_id: amb.cenario.pessoa,
+      itens: [{ material_id: amb.cenario.materialId, quantidade: 1 }],
+    },
     { Origin: "https://site-malicioso.example" },
   );
   assert.equal(r.status, 403);

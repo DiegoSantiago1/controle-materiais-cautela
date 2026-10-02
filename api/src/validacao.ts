@@ -66,6 +66,93 @@ export function objeto(valor: unknown): Record<string, unknown> {
   return valor as Record<string, unknown>;
 }
 
+/** Id opcional: ausente ou null vira null. */
+export function idOpcional(valor: unknown, campo: string): number | null {
+  return valor === undefined || valor === null ? null : id(valor, campo);
+}
+
+/** Inteiro numa faixa (quantidade, prazo, mínimo). */
+export function inteiro(valor: unknown, campo: string, minimo: number, maximo: number): number {
+  if (typeof valor !== "number" || !Number.isInteger(valor) || valor < minimo || valor > maximo) {
+    throw new ErroDeValidacao(
+      campo,
+      `${campo} deve ser um número inteiro de ${minimo} a ${maximo}.`,
+    );
+  }
+  return valor;
+}
+
+export function inteiroOpcional(
+  valor: unknown,
+  campo: string,
+  minimo: number,
+  maximo: number,
+): number | null {
+  return valor === undefined || valor === null ? null : inteiro(valor, campo, minimo, maximo);
+}
+
+/** Lista de ids sem repetição (ex.: as unidades de uma devolução). */
+export function listaDeIds(valor: unknown, campo: string, maximo: number): number[] {
+  if (!Array.isArray(valor) || valor.length === 0 || valor.length > maximo) {
+    throw new ErroDeValidacao(campo, `${campo} deve ser uma lista de 1 a ${maximo} itens.`);
+  }
+  const ids = valor.map((item) => id(item, campo));
+  if (new Set(ids).size !== ids.length) {
+    throw new ErroDeValidacao(campo, `${campo} tem itens repetidos.`);
+  }
+  return ids;
+}
+
+export function booleano(valor: unknown, campo: string): boolean {
+  if (typeof valor !== "boolean") {
+    throw new ErroDeValidacao(campo, `${campo} deve ser verdadeiro ou falso.`);
+  }
+  return valor;
+}
+
+/** Valor em reais: número de 0 a 10 milhões, com no máximo 2 casas decimais. */
+export function dinheiro(valor: unknown, campo: string): number {
+  if (
+    typeof valor !== "number" ||
+    !Number.isFinite(valor) ||
+    valor < 0 ||
+    valor > 10_000_000 ||
+    Math.round(valor * 100) !== Number((valor * 100).toFixed(6))
+  ) {
+    throw new ErroDeValidacao(
+      campo,
+      `${campo} deve ser um valor de 0 a 10.000.000, com até 2 casas.`,
+    );
+  }
+  return valor;
+}
+
+const DATA = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** Data no formato AAAA-MM-DD, e que exista no calendário (31/02 não passa). */
+export function data(valor: unknown, campo: string): string {
+  const partes = typeof valor === "string" ? DATA.exec(valor) : null;
+  if (partes === null) {
+    throw new ErroDeValidacao(campo, `${campo} deve ser uma data no formato AAAA-MM-DD.`);
+  }
+  const [, a = "", m = "", d = ""] = partes;
+  const dia = new Date(Date.UTC(Number(a), Number(m) - 1, Number(d)));
+  if (
+    dia.getUTCFullYear() !== Number(a) ||
+    dia.getUTCMonth() !== Number(m) - 1 ||
+    dia.getUTCDate() !== Number(d) ||
+    Number(a) < 1900 ||
+    Number(a) > 2100
+  ) {
+    throw new ErroDeValidacao(campo, `${campo} não é uma data válida.`);
+  }
+  return valor as string;
+}
+
+export function dataOpcional(valor: unknown, campo: string): string | null {
+  return valor === undefined || valor === null || valor === "" ? null : data(valor, campo);
+}
+
 /** Termo de busca vindo da query string (?busca=...). */
 export function termoDeBusca(valor: unknown): string {
   if (typeof valor !== "string") {
