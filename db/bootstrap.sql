@@ -81,8 +81,11 @@ SELECT format(
 SELECT format('GRANT almox_leitura TO %I', :'bi_usuario')
 \gexec
 
+-- Também no banco da aplicação: o relatório operacional (posse, estoque, movimentação por
+-- equipamentista) lê o "sistema vivo". O grupo só enxerga os schemas bi, analise e dq,
+-- então não lê o core nem as senhas e sessões do schema app (testado em test_bi.py).
 SELECT format('GRANT CONNECT ON DATABASE %I TO almox_leitura', b.nome)
-FROM unnest(ARRAY[:'banco', :'banco_teste']) AS b(nome)
+FROM unnest(ARRAY[:'banco', :'banco_teste', :'banco_app']) AS b(nome)
 \gexec
 
 -- 6. Usuário da API (menor privilégio). O grupo almox_aplicacao (sem login) recebe as

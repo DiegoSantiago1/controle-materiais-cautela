@@ -112,9 +112,9 @@ def test_senha_errada_e_recusada(config_banco: ConfigBanco) -> None:
         )
 
 
-def test_banco_da_aplicacao_so_aceita_o_dono_e_a_api(config_banco: ConfigBanco) -> None:
-    """O Power BI não conecta no banco da aplicação; a API não conecta no das análises
-    (este segundo lado é testado em test_aplicacao.py)."""
+def test_banco_da_aplicacao_so_aceita_o_dono_a_api_e_a_leitura(config_banco: ConfigBanco) -> None:
+    """No banco da aplicação conectam o dono, a API e o grupo de leitura do Power BI (o
+    relatório operacional, D27); a API não conecta no das análises (test_aplicacao.py)."""
     with conectar(config_banco.do_banco_da_aplicacao()) as con:
         linhas = con.execute(
             """
@@ -123,4 +123,6 @@ def test_banco_da_aplicacao_so_aceita_o_dono_e_a_api(config_banco: ConfigBanco) 
             WHERE d.datname = current_database() AND a.privilege_type = 'CONNECT'
             """
         ).fetchall()
-    assert sorted(linhas) == sorted([(config_banco.usuario,), ("almox_aplicacao",)])
+    assert sorted(linhas) == sorted(
+        [(config_banco.usuario,), ("almox_aplicacao",), ("almox_leitura",)]
+    )
