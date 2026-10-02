@@ -25,3 +25,7 @@ data/gerado/*
 .ipynb_checkpoints/
 node_modules/
 .DS_Store
+
+# Demo estática (gerada por demo/exportar_dados.py e demo/build.mjs)
+demo/dados-demo.json
+demo/dist/

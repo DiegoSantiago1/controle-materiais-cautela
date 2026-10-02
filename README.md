@@ -3,6 +3,8 @@
 **Análise de dados do controle de material de uma unidade logística (dados fictícios): carga patrimonial, cautelas, uso de equipamentos e estoque de consumo, com PostgreSQL, SQL analítico, Python (Pandas/NumPy) e Power BI. Mais um sistema web de controle (retirada, devolução, posse, estoque e administração, no computador e no celular) que grava pelas mesmas regras do banco.**
 
 > Projeto 2 do meu portfólio de Dados, na sequência do [Painel de Vendas](https://github.com/DiegoSantiago1/analise-vendas-concessionaria). **Projeto real:** desenvolvi o sistema de cautelas da seção de material em que trabalhei na Força Aérea, onde ele substituiu o controle no papel e continua em uso. Esta é a versão reconstruída para o portfólio, com dados fictícios.
+>
+> **[▶ Abrir a demo online](https://diegosantiago1.github.io/Portifolio/projetos/controle-materiais/)**: o sistema rodando no navegador, com dados fictícios (o que você fizer fica só no seu navegador).
 
 ## O problema
 
@@ -193,6 +195,10 @@ npm start
 ```
 
 No Windows, se o PowerShell recusar o `npm` ("a execução de scripts foi desabilitada"), libere scripts locais só para o seu usuário: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+
+### A demo online
+
+A [demo](https://diegosantiago1.github.io/Portifolio/projetos/controle-materiais/) é a mesma tela, sem servidor: `demo/demo-api.js` intercepta as chamadas `/api` e responde no navegador, a partir de um retrato do banco da aplicação, repetindo de forma simplificada as regras principais (estoque insuficiente, unidade com outro militar, estado sem observação, perfis). Para gerar de novo: `python demo/exportar_dados.py` e `node demo/build.mjs <pasta>`.
 
 ### Os relatórios do Power BI
 
