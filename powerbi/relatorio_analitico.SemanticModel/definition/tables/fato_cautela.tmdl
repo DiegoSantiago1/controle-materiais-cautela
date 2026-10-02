@@ -1,0 +1,113 @@
+table fato_cautela
+	lineageTag: 3932be33-d8a9-56a5-9eb6-0c31f5b13df8
+
+	column retirada_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 71d7e5b0-b55f-5d7a-82e6-335e7a0ece13
+		summarizeBy: sum
+		sourceColumn: retirada_id
+
+	column data_retirada
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		isHidden
+		lineageTag: aa25a2a6-eae8-50f7-b363-7dc0d6d91783
+		summarizeBy: none
+		sourceColumn: data_retirada
+
+	column retirada_em
+		dataType: dateTime
+		formatString: dd/mm/yyyy hh:nn
+		lineageTag: 97dac928-1d39-5594-8b30-ac80815b1e20
+		summarizeBy: none
+		sourceColumn: retirada_em
+
+	column prazo
+		dataType: dateTime
+		formatString: dd/mm/yyyy hh:nn
+		lineageTag: 0523de7d-0f7f-5469-931a-658d568c4b35
+		summarizeBy: none
+		sourceColumn: prazo
+
+	column devolvida_em
+		dataType: dateTime
+		formatString: dd/mm/yyyy hh:nn
+		lineageTag: 46df98b6-a229-516c-9068-b51d1c757fb8
+		summarizeBy: none
+		sourceColumn: devolvida_em
+
+	column material
+		dataType: string
+		isHidden
+		lineageTag: 7b4d1253-788e-5728-8e3e-f8ae4390a2b3
+		summarizeBy: none
+		sourceColumn: material
+
+	column bmp
+		dataType: string
+		lineageTag: 58dd3add-7441-5d9e-92e4-79a522214782
+		summarizeBy: none
+		sourceColumn: bmp
+
+	column pessoa
+		dataType: string
+		isHidden
+		lineageTag: 31b36c75-b930-525d-9771-c55815f2a191
+		summarizeBy: none
+		sourceColumn: pessoa
+
+	column setor
+		dataType: string
+		isHidden
+		lineageTag: bd6ada7a-c313-5702-847b-a27469c610f7
+		summarizeBy: none
+		sourceColumn: setor
+
+	column situacao
+		dataType: string
+		lineageTag: 9aa847a1-fd32-5634-8464-249d578204fe
+		summarizeBy: none
+		sourceColumn: situacao
+
+	column atrasada
+		dataType: boolean
+		lineageTag: 49462457-aec2-5b13-a49a-d15d99a584c6
+		summarizeBy: none
+		sourceColumn: atrasada
+
+	column dias_de_atraso
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 9d5cb313-1d9e-51bd-93d0-91e2048a6dd6
+		summarizeBy: sum
+		sourceColumn: dias_de_atraso
+
+	column horas_com_a_pessoa
+		dataType: double
+		formatString: #,0.0
+		lineageTag: fe8af2d3-cb23-5591-856e-f4f4a750526d
+		summarizeBy: sum
+		sourceColumn: horas_com_a_pessoa
+
+	column mesmo_dia
+		dataType: boolean
+		lineageTag: b4a9dff3-dc65-504b-8238-8ccb5e84eb86
+		summarizeBy: none
+		sourceColumn: mesmo_dia
+
+	column estado_na_devolucao
+		dataType: string
+		lineageTag: 655e3441-c727-559f-a280-8d8089b7bcca
+		summarizeBy: none
+		sourceColumn: estado_na_devolucao
+
+	partition fato_cautela = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado"),
+				    Tabela = Fonte{[Schema = "bi", Item = "fato_cautela"]}[Data]
+				in
+				    Tabela
+

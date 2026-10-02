@@ -1,0 +1,108 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "tab_ruptura",
+  "position": {
+    "x": 328,
+    "y": 500,
+    "z": 5000,
+    "width": 456,
+    "height": 208,
+    "tabOrder": 5000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "ruptura"
+                    }
+                  },
+                  "Property": "inicio"
+                }
+              },
+              "queryRef": "ruptura.inicio",
+              "nativeQueryRef": "inicio",
+              "displayName": "Faltou em"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "ruptura"
+                    }
+                  },
+                  "Property": "fim"
+                }
+              },
+              "queryRef": "ruptura.fim",
+              "nativeQueryRef": "fim",
+              "displayName": "Voltou em"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "ruptura"
+                    }
+                  },
+                  "Property": "dias"
+                }
+              },
+              "queryRef": "ruptura.dias",
+              "nativeQueryRef": "dias",
+              "displayName": "Dias"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "ruptura"
+                  }
+                },
+                "Property": "inicio"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": false
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Episódios de falta do material'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

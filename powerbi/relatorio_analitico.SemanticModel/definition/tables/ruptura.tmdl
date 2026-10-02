@@ -1,0 +1,45 @@
+table ruptura
+	lineageTag: e445d44d-9a86-5c61-b10c-d5f07dc2f125
+
+	column codigo
+		dataType: string
+		lineageTag: 23c66184-12dc-53bb-8be6-50057c7d0e3b
+		summarizeBy: none
+		sourceColumn: codigo
+
+	column nome
+		dataType: string
+		lineageTag: 51b4e255-738a-56d1-a5c9-345093131245
+		summarizeBy: none
+		sourceColumn: nome
+
+	column inicio
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: 4812c4f4-02bb-5546-98a4-64a88544f832
+		summarizeBy: none
+		sourceColumn: inicio
+
+	column fim
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: cb186e8b-2adb-59e3-b459-afd5aa9c15c1
+		summarizeBy: none
+		sourceColumn: fim
+
+	column dias
+		dataType: int64
+		formatString: 0
+		lineageTag: f559e204-8f32-504e-9b52-486a2f90e3c7
+		summarizeBy: none
+		sourceColumn: dias
+
+	partition ruptura = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado"),
+				    Tabela = Fonte{[Schema = "analise", Item = "vw_ruptura"]}[Data]
+				in
+				    Tabela
+

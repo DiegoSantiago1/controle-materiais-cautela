@@ -1,0 +1,61 @@
+table dim_calendario
+	lineageTag: d24e6ecd-a375-5388-872f-1e4f9dd715f0
+	dataCategory: Time
+
+	column data
+		dataType: dateTime
+		isKey
+		formatString: dd/mm/yyyy
+		lineageTag: 3713d721-3da6-5266-ae03-7fc9a9ed7bec
+		summarizeBy: none
+		sourceColumn: data
+
+	column ano
+		dataType: int64
+		formatString: 0
+		lineageTag: dc9254f1-4c50-5475-bb28-bdca0f96070b
+		summarizeBy: none
+		sourceColumn: ano
+
+	column mes
+		dataType: int64
+		formatString: 0
+		lineageTag: ac03f30f-5282-5dd1-9b9d-9db32982c005
+		summarizeBy: none
+		sourceColumn: mes
+
+	column ano_mes
+		dataType: string
+		lineageTag: a03c8f61-55ae-552f-90d7-41c8000f8153
+		summarizeBy: none
+		sourceColumn: ano_mes
+
+	column trimestre
+		dataType: int64
+		formatString: 0
+		lineageTag: 03b67e30-5303-5573-a801-473c41d3f4c0
+		summarizeBy: none
+		sourceColumn: trimestre
+
+	column dia_da_semana
+		dataType: int64
+		formatString: 0
+		lineageTag: 62ec2c24-312d-5c55-b9ee-f47edf123b74
+		summarizeBy: none
+		sourceColumn: dia_da_semana
+
+	column dia_util
+		dataType: boolean
+		lineageTag: 57d06666-9811-5d20-b86b-6a3038630fb3
+		summarizeBy: none
+		sourceColumn: dia_util
+
+	partition dim_calendario = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado"),
+				    Tabela = Fonte{[Schema = "bi", Item = "dim_calendario"]}[Data]
+				in
+				    Tabela
+

@@ -1,0 +1,168 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "tab_pessoas",
+  "position": {
+    "x": 728,
+    "y": 188,
+    "z": 7000,
+    "width": 536,
+    "height": 520,
+    "tabOrder": 7000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "atraso_pessoa"
+                    }
+                  },
+                  "Property": "posicao_geral"
+                }
+              },
+              "queryRef": "atraso_pessoa.posicao_geral",
+              "nativeQueryRef": "posicao_geral",
+              "displayName": "Posição"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "atraso_pessoa"
+                    }
+                  },
+                  "Property": "pessoa"
+                }
+              },
+              "queryRef": "atraso_pessoa.pessoa",
+              "nativeQueryRef": "pessoa",
+              "displayName": "Pessoa"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "atraso_pessoa"
+                    }
+                  },
+                  "Property": "setor"
+                }
+              },
+              "queryRef": "atraso_pessoa.setor",
+              "nativeQueryRef": "setor",
+              "displayName": "Setor"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "atraso_pessoa"
+                    }
+                  },
+                  "Property": "cautelas"
+                }
+              },
+              "queryRef": "atraso_pessoa.cautelas",
+              "nativeQueryRef": "cautelas",
+              "displayName": "Cautelas"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "atraso_pessoa"
+                    }
+                  },
+                  "Property": "atrasadas"
+                }
+              },
+              "queryRef": "atraso_pessoa.atrasadas",
+              "nativeQueryRef": "atrasadas",
+              "displayName": "Atrasadas"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "atraso_pessoa"
+                    }
+                  },
+                  "Property": "taxa_atraso"
+                }
+              },
+              "queryRef": "atraso_pessoa.taxa_atraso",
+              "nativeQueryRef": "taxa_atraso",
+              "displayName": "% atraso"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "atraso_pessoa"
+                    }
+                  },
+                  "Property": "ainda_fora"
+                }
+              },
+              "queryRef": "atraso_pessoa.ainda_fora",
+              "nativeQueryRef": "ainda_fora",
+              "displayName": "Ainda fora"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "atraso_pessoa"
+                  }
+                },
+                "Property": "posicao_geral"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": false
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Quem mais atrasa (ajustado pelo material)'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

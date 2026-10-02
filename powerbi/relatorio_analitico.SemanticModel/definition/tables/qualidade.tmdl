@@ -1,0 +1,44 @@
+table qualidade
+	lineageTag: b5dce806-4310-5769-8f81-1c61000e0e46
+
+	column codigo
+		dataType: string
+		lineageTag: 755bf08e-8524-5650-87f7-7f7d41978266
+		summarizeBy: none
+		sourceColumn: codigo
+
+	column descricao
+		dataType: string
+		lineageTag: d588a4dc-80c9-5ded-870b-63d07e105622
+		summarizeBy: none
+		sourceColumn: descricao
+
+	column severidade
+		dataType: string
+		lineageTag: fc6789d5-bd0e-5072-9149-d73150e260ad
+		summarizeBy: none
+		sourceColumn: severidade
+
+	column ocorrencias
+		dataType: int64
+		formatString: 0
+		lineageTag: cd401f2c-2bce-525d-bfb4-94c985e0a3be
+		summarizeBy: none
+		sourceColumn: ocorrencias
+
+	column executada_em
+		dataType: dateTime
+		formatString: dd/mm/yyyy hh:nn
+		lineageTag: 957696d1-4660-512a-9c5f-9ba6316fdb16
+		summarizeBy: none
+		sourceColumn: executada_em
+
+	partition qualidade = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado"),
+				    Tabela = Fonte{[Schema = "dq", Item = "vw_ultima_execucao"]}[Data]
+				in
+				    Tabela
+

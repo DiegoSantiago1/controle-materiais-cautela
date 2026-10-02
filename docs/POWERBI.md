@@ -168,6 +168,12 @@ Para conferir se o relatório está certo. São fixos porque a atividade de sete
 
 Banco `almoxarifado` (congelado em 31/08/2026, o mesmo dos notebooks).
 
+**Já montado** em `powerbi/relatorio_analitico.pbip`: cinco páginas (visão geral e uma por pergunta, A1 a A4), com as medidas abaixo e mais algumas (vencidas em aberto, valor e unidades paradas, horas esgotado, consumo em alerta, linhas com problema). As views `analise.*` e `dq.vw_ultima_execucao` entram com nomes curtos (`uso_material`, `status_consumo`, `ruptura`, `atraso_pessoa`, `conferencia`, `qualidade`).
+
+**O único Power Query de verdade** está em `conferencia_problemas`: a view da conferência tem uma coluna verdadeiro/falso por tipo de problema (nome variante, local variante, BMP inexistente...). Para um gráfico "problemas por tipo", a consulta **despivota** essas colunas (`Table.UnpivotOtherColumns`: cada linha da planilha vira uma linha por problema), mantém só as verdadeiras e troca o nome técnico por um legível. "BMP ausente legítimo" fica de fora: material recém-adquirido ainda não tem BMP, e isso não é erro.
+
+<p align="center"><img src="img/powerbi_visao_geral.png" width="49%" alt="Relatório analítico: visão geral"> <img src="img/powerbi_consumo.png" width="49%" alt="Relatório analítico: consumo e ruptura do toner"></p>
+
 ### B.1 Tabelas a importar
 
 **Modelo estrela** (schema `bi`):
@@ -261,6 +267,6 @@ Os notebooks (`notebooks/0*.ipynb`) têm os números de referência para conferi
 
 ## Verificação e atualização
 
-> **Parte A verificada no Power BI Desktop (2.158, set/2026):** o projeto `powerbi/relatorio_operacional.pbip` foi aberto, atualizado contra o `almoxarifado_app` e cada cartão conferido com SQL equivalente no banco (disponível, valor, retiradas, unidades, devoluções, % de avaria, posse vencida, dias em manutenção, retiradas por finalidade e o top 10). **Parte B ainda não verificada no Power BI:** as medidas seguem a sintaxe padrão do DAX e os números de referência foram calculados com SQL; confira cada medida com eles.
+> **Parte A verificada no Power BI Desktop (2.158, set/2026):** o projeto `powerbi/relatorio_operacional.pbip` foi aberto, atualizado contra o `almoxarifado_app` e cada cartão conferido com SQL equivalente no banco (disponível, valor, retiradas, unidades, devoluções, % de avaria, posse vencida, dias em manutenção, retiradas por finalidade e o top 10). **Parte B verificada da mesma forma** (`powerbi/relatorio_analitico.pbip` contra o `almoxarifado`): 5.994 cautelas, 11,8% de atraso, 705 atrasadas, 7 vencidas em aberto, 89,0% dos rádios devolvidos no mesmo dia, R$ 108.390 parados, 9 itens de consumo em alerta, 171 de 358 linhas da planilha com problema (47,8%), 11 unidades em posse dadas como paradas, 56 dias sem toner e 0 ocorrências de qualidade, iguais ao SQL e aos notebooks.
 
 Os dados são fictícios e reproduzíveis. Se o banco for recarregado (`python -m almox.carga --recriar` ou `--banco app`), basta **Atualizar** no Power BI. Como o usuário do BI e as permissões são recriados pelo bootstrap e pelas migrações, a conexão continua funcionando.

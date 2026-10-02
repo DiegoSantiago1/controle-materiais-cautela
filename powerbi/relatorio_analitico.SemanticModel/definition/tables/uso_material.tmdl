@@ -1,0 +1,119 @@
+table uso_material
+	lineageTag: 116d892c-4b73-5429-a4d2-5ac039806f3c
+
+	column codigo
+		dataType: string
+		lineageTag: 096d15e0-f871-50b7-b85b-ca51e940f896
+		summarizeBy: none
+		sourceColumn: codigo
+
+	column nome
+		dataType: string
+		lineageTag: 0770f4d3-9c85-5cb3-a34c-1f71842819ef
+		summarizeBy: none
+		sourceColumn: nome
+
+	column subcategoria
+		dataType: string
+		lineageTag: 0e170ec5-c659-5d49-af94-d95dace2a85b
+		summarizeBy: none
+		sourceColumn: subcategoria
+
+	column custo_unitario
+		dataType: double
+		formatString: R\$ #,0.00
+		lineageTag: f6d82363-33a3-5d24-a284-3c3ce87d5dda
+		summarizeBy: none
+		sourceColumn: custo_unitario
+
+	column unidades_na_carga
+		dataType: int64
+		formatString: 0
+		lineageTag: 4fc053b3-7596-5fb1-993b-9bebc40ea7f7
+		summarizeBy: none
+		sourceColumn: unidades_na_carga
+
+	column cautelas
+		dataType: int64
+		formatString: 0
+		lineageTag: 744a0759-69d7-5f13-87fb-eaf439af2e9e
+		summarizeBy: none
+		sourceColumn: cautelas
+
+	column unidades_usadas
+		dataType: int64
+		formatString: 0
+		lineageTag: 17bec05d-cc87-5e95-8b48-eb1736f7f587
+		summarizeBy: none
+		sourceColumn: unidades_usadas
+
+	column utilizacao
+		dataType: double
+		formatString: 0.0%
+		lineageTag: a1e657ec-9d77-56bb-8d31-d83201f50536
+		summarizeBy: none
+		sourceColumn: utilizacao
+
+	column pico_simultaneo
+		dataType: int64
+		formatString: 0
+		lineageTag: 1a91ad87-f710-5757-bd5e-37fc6f798e57
+		summarizeBy: none
+		sourceColumn: pico_simultaneo
+
+	column horas_esgotado
+		dataType: double
+		formatString: #,0.0
+		lineageTag: a636bdc6-4cf5-5ba4-8e78-aa7e8ca90a62
+		summarizeBy: none
+		sourceColumn: horas_esgotado
+
+	column unidades_paradas
+		dataType: int64
+		formatString: 0
+		lineageTag: 8deed7b9-2823-55ff-90c7-1a8c8d9d5c7c
+		summarizeBy: none
+		sourceColumn: unidades_paradas
+
+	column valor_parado
+		dataType: double
+		formatString: R\$ #,0
+		lineageTag: d23e3085-39f7-548e-a739-43e292306b6b
+		summarizeBy: none
+		sourceColumn: valor_parado
+
+	column baixadas_no_periodo
+		dataType: int64
+		formatString: 0
+		lineageTag: b249d1b8-541a-59e2-b37a-1ec3c178caec
+		summarizeBy: none
+		sourceColumn: baixadas_no_periodo
+
+	column participacao
+		dataType: double
+		formatString: 0.0%
+		lineageTag: fad66b75-8d33-58ad-aa47-42eebc9cc031
+		summarizeBy: none
+		sourceColumn: participacao
+
+	column classe_abc
+		dataType: string
+		lineageTag: 05ea0881-ed2b-577d-b57a-8425a97351d7
+		summarizeBy: none
+		sourceColumn: classe_abc
+
+	column ja_esgotou
+		dataType: boolean
+		lineageTag: 0828d665-605b-5717-b35c-a64ca0f2cd2d
+		summarizeBy: none
+		sourceColumn: ja_esgotou
+
+	partition uso_material = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado"),
+				    Tabela = Fonte{[Schema = "analise", Item = "vw_uso_material"]}[Data]
+				in
+				    Tabela
+

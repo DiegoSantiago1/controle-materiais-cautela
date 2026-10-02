@@ -1,0 +1,38 @@
+table conferencia_problemas
+	lineageTag: 1ac8878f-c2d1-5cbf-aab4-99918edf4def
+
+	column linha
+		dataType: int64
+		formatString: 0
+		lineageTag: f7527189-e4bd-5865-af4a-a09cc27e9a21
+		summarizeBy: none
+		sourceColumn: linha
+
+	column situacao
+		dataType: string
+		lineageTag: 11e79e55-29a9-51c9-ad47-f78f142e7998
+		summarizeBy: none
+		sourceColumn: situacao
+
+	column problema
+		dataType: string
+		lineageTag: 9435f917-a697-56c7-ae68-4aac5fc47bae
+		summarizeBy: none
+		sourceColumn: problema
+
+	partition conferencia_problemas = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado"),
+				    Planilha = Fonte{[Schema = "analise", Item = "vw_conferencia_planilha"]}[Data],
+				    Colunas = Table.SelectColumns(Planilha, {"linha", "situacao", "local_variante", "nome_variante", "nome_digitacao", "divergencia_historico", "serie_divergente", "bmp_ausente_erro", "nome_artefato_extracao", "baixa_com_detentor", "bmp_inexistente", "bmp_trocado_existente", "linha_duplicada"}),
+				    Despivotada = Table.UnpivotOtherColumns(Colunas, {"linha", "situacao"}, "problema", "tem"),
+				    SoProblemas = Table.SelectRows(Despivotada, each [tem] = true),
+				    SemMarcador = Table.RemoveColumns(SoProblemas, {"tem"}),
+				    Nomes = #table({"de", "para"}, {{"local_variante", "Local escrito de outro jeito"}, {"nome_variante", "Nome escrito de outro jeito"}, {"nome_digitacao", "Erro de digitação no nome"}, {"divergencia_historico", "Diverge do histórico"}, {"serie_divergente", "Número de série divergente"}, {"bmp_ausente_erro", "BMP faltando"}, {"nome_artefato_extracao", "Lixo de extração no nome"}, {"baixa_com_detentor", "Descarga de material em posse"}, {"bmp_inexistente", "BMP inexistente"}, {"bmp_trocado_existente", "BMP de outra unidade"}, {"linha_duplicada", "Linha repetida"}}),
+				    Legivel = Table.TransformColumns(SemMarcador, {"problema", each Nomes{[de = _]}[para], type text}),
+				    Tipada = Table.TransformColumnTypes(Legivel, {{"linha", Int64.Type}, {"situacao", type text}})
+				in
+				    Tipada
+

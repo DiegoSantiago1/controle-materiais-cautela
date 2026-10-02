@@ -1,0 +1,104 @@
+table Medidas
+	lineageTag: 686cce64-3b61-5209-a6c9-aaa23d8444e2
+
+	/// Cautelas (retiradas de material patrimonial) no filtro.
+	measure 'Cautelas' = COUNTROWS ( fato_cautela )
+		formatString: #,0
+		lineageTag: 9db70191-e444-54f9-92ba-300dfd929d72
+
+	/// Cautelas devolvidas depois do prazo ou ainda fora com o prazo vencido.
+	measure 'Cautelas atrasadas' = CALCULATE ( [Cautelas], fato_cautela[atrasada] = TRUE () )
+		formatString: #,0
+		lineageTag: b32d9715-28f5-5eca-bd52-9568e954e73a
+
+	/// Parte das cautelas com atraso.
+	measure '% de atraso' = DIVIDE ( [Cautelas atrasadas], [Cautelas] )
+		formatString: 0.0%
+		lineageTag: bc90ab64-a4a4-5ed9-964a-5c1351f384d0
+
+	/// Cautelas ainda fora e já vencidas no fim do período.
+	measure 'Vencidas em aberto' = CALCULATE ( [Cautelas], fato_cautela[situacao] = "EM_ABERTO", fato_cautela[atrasada] = TRUE () )
+		formatString: #,0
+		lineageTag: 5859000a-4db5-5fbf-a888-bc15e1796b13
+
+	/// Parte das cautelas de rádio devolvidas no mesmo dia (o rádio é de serviço, não de posse).
+	measure 'Rádios devolvidos no mesmo dia' = DIVIDE ( CALCULATE ( [Cautelas], fato_cautela[mesmo_dia] = TRUE (), dim_material[subcategoria] = "Rádios portáteis" ), CALCULATE ( [Cautelas], fato_cautela[situacao] = "DEVOLVIDA", dim_material[subcategoria] = "Rádios portáteis" ) )
+		formatString: 0.0%
+		lineageTag: 138f41f8-5cdd-5a4c-9000-741f7be478ad
+
+	/// Material de consumo × dia com saldo zero.
+	measure 'Dias com falta' = CALCULATE ( COUNTROWS ( fato_consumo_diario ), fato_consumo_diario[zerado] = TRUE () )
+		formatString: #,0
+		lineageTag: b272ff5f-2311-5d22-b25f-b9ca5278ac87
+
+	/// Saldo no último dia do filtro (semiaditiva: saldo não se soma no tempo).
+	measure 'Saldo no fim do período' = CALCULATE ( SUM ( fato_consumo_diario[saldo_fim_do_dia] ), LASTDATE ( dim_calendario[data] ) )
+		formatString: #,0
+		lineageTag: 08bf129e-e932-5f4e-9a0f-797c0913ef01
+
+	/// Estoque mínimo no último dia do filtro.
+	measure 'Estoque mínimo' = CALCULATE ( SUM ( fato_consumo_diario[estoque_minimo] ), LASTDATE ( dim_calendario[data] ) )
+		formatString: #,0
+		lineageTag: 07a01151-89d1-557c-b0af-f3fc06978d96
+
+	/// Valor das unidades que nunca saíram no período.
+	measure 'Valor parado' = SUM ( uso_material[valor_parado] )
+		formatString: R\$ #,0
+		lineageTag: b2eafd94-ab88-57fd-a54b-65f32dc7764d
+
+	/// Unidades que nunca saíram no período.
+	measure 'Unidades paradas' = SUM ( uso_material[unidades_paradas] )
+		formatString: #,0
+		lineageTag: c03f3a05-2b17-59c0-abf5-0152cb341ba8
+
+	/// Horas com todas as unidades do material fora.
+	measure 'Horas esgotado' = SUM ( uso_material[horas_esgotado] )
+		formatString: #,0
+		lineageTag: ff000668-304f-5a92-a7c3-6302527c9026
+
+	/// Materiais de consumo críticos ou abaixo do mínimo no fim do período.
+	measure 'Itens de consumo em alerta' = CALCULATE ( COUNTROWS ( status_consumo ), status_consumo[status] IN { "CRITICO", "BAIXO" } )
+		formatString: #,0
+		lineageTag: 369e0546-03a1-56d0-ac66-ebfc4885dc48
+
+	/// Ocorrências da última execução das regras de qualidade de dados (zero é o esperado).
+	measure 'Ocorrências de qualidade' = SUM ( qualidade[ocorrencias] ) + 0
+		formatString: #,0
+		lineageTag: 14f7a4d9-7250-59e3-8f3a-4db07113b39c
+
+	/// Linhas da planilha de carga conferidas.
+	measure 'Linhas da planilha' = COUNTROWS ( conferencia )
+		formatString: #,0
+		lineageTag: e3737d61-3b16-51b2-b7e8-91c6282b89ec
+
+	/// Linhas com pelo menos um problema (BMP ausente legítimo não conta).
+	measure 'Linhas com problema' = DISTINCTCOUNT ( conferencia_problemas[linha] )
+		formatString: #,0
+		lineageTag: 7211e755-533c-5d22-85f4-c179eff4b254
+
+	/// Parte da planilha com algum problema.
+	measure '% de linhas com problema' = DIVIDE ( [Linhas com problema], [Linhas da planilha] )
+		formatString: 0.0%
+		lineageTag: 7fe25f87-81a5-5fff-86d4-54211378fc0f
+
+	/// Problemas encontrados (uma linha pode ter vários).
+	measure 'Problemas' = COUNTROWS ( conferencia_problemas )
+		formatString: #,0
+		lineageTag: 24f3c290-fc11-5c9b-8a62-184f13419371
+
+	/// Planilha diz localizado ou descarga, mas a unidade está com uma pessoa: o risco mais caro.
+	measure 'Unidades em posse dadas como paradas' = CALCULATE ( COUNTROWS ( conferencia ), conferencia[risco_cautela] = TRUE () )
+		formatString: #,0
+		lineageTag: f8c64feb-42a1-5b7c-a250-03c6a1b2f6f9
+
+	column Coluna
+		dataType: string
+		isHidden
+		lineageTag: 8104e9f5-c2c8-58b4-8c9c-abb219816f36
+		summarizeBy: none
+		sourceColumn: Coluna
+
+	partition Medidas = m
+		mode: import
+		source = #table(type table [Coluna = text], {})
+

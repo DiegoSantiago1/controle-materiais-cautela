@@ -1,0 +1,192 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "tab_risco",
+  "position": {
+    "x": 548,
+    "y": 188,
+    "z": 6000,
+    "width": 716,
+    "height": 520,
+    "tabOrder": 6000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "conferencia"
+                    }
+                  },
+                  "Property": "linha"
+                }
+              },
+              "queryRef": "conferencia.linha",
+              "nativeQueryRef": "linha",
+              "displayName": "Linha"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "conferencia"
+                    }
+                  },
+                  "Property": "bmp"
+                }
+              },
+              "queryRef": "conferencia.bmp",
+              "nativeQueryRef": "bmp",
+              "displayName": "BMP"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "conferencia"
+                    }
+                  },
+                  "Property": "nomenclatura"
+                }
+              },
+              "queryRef": "conferencia.nomenclatura",
+              "nativeQueryRef": "nomenclatura",
+              "displayName": "Nomenclatura"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "conferencia"
+                    }
+                  },
+                  "Property": "situacao"
+                }
+              },
+              "queryRef": "conferencia.situacao",
+              "nativeQueryRef": "situacao",
+              "displayName": "Planilha diz"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "conferencia"
+                    }
+                  },
+                  "Property": "status_no_cadastro"
+                }
+              },
+              "queryRef": "conferencia.status_no_cadastro",
+              "nativeQueryRef": "status_no_cadastro",
+              "displayName": "Cadastro diz"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "conferencia"
+                    }
+                  },
+                  "Property": "detentor_no_cadastro"
+                }
+              },
+              "queryRef": "conferencia.detentor_no_cadastro",
+              "nativeQueryRef": "detentor_no_cadastro",
+              "displayName": "Com quem está"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'O risco mais caro: unidades em posse que a planilha dá como localizadas ou descarga'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "f_risco_cautela",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "conferencia"
+              }
+            },
+            "Property": "risco_cautela"
+          }
+        },
+        "type": "Categorical",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "f",
+              "Entity": "conferencia",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "In": {
+                  "Expressions": [
+                    {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Source": "f"
+                          }
+                        },
+                        "Property": "risco_cautela"
+                      }
+                    }
+                  ],
+                  "Values": [
+                    [
+                      {
+                        "Literal": {
+                          "Value": "true"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "cartao5",
+  "position": {
+    "x": 1024,
+    "y": 80,
+    "z": 5000,
+    "width": 240,
+    "height": 96,
+    "tabOrder": 5000
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "Rádios devolvidos no mesmo dia"
+                }
+              },
+              "queryRef": "Medidas.Rádios devolvidos no mesmo dia",
+              "nativeQueryRef": "Rádios devolvidos no mesmo dia",
+              "displayName": "Rádios no mesmo dia"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "labels": [
+        {
+          "properties": {
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

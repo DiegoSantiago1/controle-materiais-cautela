@@ -1,0 +1,31 @@
+relationship ac44781f-d8b0-5919-8363-f2d91fd79500
+	fromColumn: fato_cautela.data_retirada
+	toColumn: dim_calendario.data
+
+relationship 77da70d8-f0cb-557a-8b7a-3c7b3bd0dec2
+	fromColumn: fato_consumo_diario.data
+	toColumn: dim_calendario.data
+
+relationship 9ccf8e11-f14d-5252-ab4a-77272fffd87d
+	fromColumn: fato_cautela.material
+	toColumn: dim_material.codigo
+
+relationship d62406a6-9564-5215-a547-46876c341292
+	fromColumn: fato_consumo_diario.material
+	toColumn: dim_material.codigo
+
+relationship a91498e8-f875-55fb-b435-d1b6fbd194e7
+	fromColumn: ruptura.codigo
+	toColumn: dim_material.codigo
+
+relationship 60226b8a-12c2-5ca0-afe5-8ba4bfc39a70
+	fromColumn: fato_cautela.pessoa
+	toColumn: dim_pessoa.matricula
+
+relationship 89f89bb2-b925-5f69-8365-4ab08485b3a3
+	fromColumn: dim_pessoa.setor
+	toColumn: dim_setor.sigla
+
+relationship 7cbd4886-e9aa-5825-af2e-55964e0bc077
+	fromColumn: conferencia_problemas.linha
+	toColumn: conferencia.linha

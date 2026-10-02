@@ -1,0 +1,26 @@
+model Model
+	culture: pt-BR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: pt-BR
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["dim_calendario", "dim_material", "dim_pessoa", "dim_setor", "fato_cautela", "fato_consumo_diario", "uso_material", "status_consumo", "ruptura", "atraso_pessoa", "conferencia", "conferencia_problemas", "qualidade", "Medidas"]
+
+ref table dim_calendario
+ref table dim_material
+ref table dim_pessoa
+ref table dim_setor
+ref table fato_cautela
+ref table fato_consumo_diario
+ref table uso_material
+ref table status_consumo
+ref table ruptura
+ref table atraso_pessoa
+ref table conferencia
+ref table conferencia_problemas
+ref table qualidade
+ref table Medidas

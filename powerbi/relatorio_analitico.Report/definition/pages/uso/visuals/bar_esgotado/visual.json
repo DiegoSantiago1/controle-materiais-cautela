@@ -1,0 +1,96 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "bar_esgotado",
+  "position": {
+    "x": 648,
+    "y": 188,
+    "z": 6000,
+    "width": 616,
+    "height": 520,
+    "tabOrder": 6000
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "uso_material"
+                    }
+                  },
+                  "Property": "nome"
+                }
+              },
+              "queryRef": "uso_material.nome",
+              "nativeQueryRef": "nome"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "Horas esgotado"
+                }
+              },
+              "queryRef": "Medidas.Horas esgotado",
+              "nativeQueryRef": "Horas esgotado",
+              "displayName": "Horas esgotado"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Medidas"
+                  }
+                },
+                "Property": "Horas esgotado"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": false
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Horas com todas as unidades fora (falta)'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

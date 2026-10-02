@@ -1,0 +1,90 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "tab_qualidade",
+  "position": {
+    "x": 848,
+    "y": 188,
+    "z": 8000,
+    "width": 416,
+    "height": 520,
+    "tabOrder": 8000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "qualidade"
+                    }
+                  },
+                  "Property": "codigo"
+                }
+              },
+              "queryRef": "qualidade.codigo",
+              "nativeQueryRef": "codigo",
+              "displayName": "Regra"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "qualidade"
+                    }
+                  },
+                  "Property": "descricao"
+                }
+              },
+              "queryRef": "qualidade.descricao",
+              "nativeQueryRef": "descricao",
+              "displayName": "O que confere"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "qualidade"
+                    }
+                  },
+                  "Property": "ocorrencias"
+                }
+              },
+              "queryRef": "qualidade.ocorrencias",
+              "nativeQueryRef": "ocorrencias",
+              "displayName": "Ocorrências"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Qualidade de dados (última execução)'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

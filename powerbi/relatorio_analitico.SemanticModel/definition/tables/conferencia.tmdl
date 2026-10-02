@@ -1,0 +1,184 @@
+table conferencia
+	lineageTag: 748b05ab-956f-524a-9607-f028aa09fb5c
+
+	column linha
+		dataType: int64
+		formatString: 0
+		lineageTag: 95849b20-b184-58af-9f34-a827fa144e48
+		summarizeBy: none
+		sourceColumn: linha
+
+	column bmp
+		dataType: string
+		lineageTag: 7a4cf5c6-720c-5492-93eb-baeee07fac12
+		summarizeBy: none
+		sourceColumn: bmp
+
+	column nomenclatura
+		dataType: string
+		lineageTag: 7fe11ae4-9fbb-5fb4-bb98-ce9c9b20c83a
+		summarizeBy: none
+		sourceColumn: nomenclatura
+
+	column numero_serie
+		dataType: string
+		lineageTag: 865fc15a-e70d-5a25-85d4-de20b3c6f29d
+		summarizeBy: none
+		sourceColumn: numero_serie
+
+	column local
+		dataType: string
+		lineageTag: 19f6af52-da33-59f6-9889-55bf3132fd8d
+		summarizeBy: none
+		sourceColumn: local
+
+	column situacao
+		dataType: string
+		lineageTag: c951c206-5a42-526a-ba86-3616b6dda575
+		summarizeBy: none
+		sourceColumn: situacao
+
+	column material_provavel
+		dataType: string
+		lineageTag: 2dff23b9-4c99-53b4-bf26-4a3e8b06b551
+		summarizeBy: none
+		sourceColumn: material_provavel
+
+	column nome_correto
+		dataType: string
+		lineageTag: 7b1283d0-ed4c-5f3b-93ac-687e2d3c0ff9
+		summarizeBy: none
+		sourceColumn: nome_correto
+
+	column similaridade_nome
+		dataType: double
+		formatString: 0.00
+		lineageTag: 01b83ae4-38c8-5005-87e9-4f1b519eba16
+		summarizeBy: none
+		sourceColumn: similaridade_nome
+
+	column unidade_provavel
+		dataType: int64
+		formatString: 0
+		lineageTag: b4c89f8b-d2d2-544d-9306-3cb6f6845bb8
+		summarizeBy: none
+		sourceColumn: unidade_provavel
+
+	column bmp_provavel
+		dataType: string
+		lineageTag: 978e31ad-a59a-58e1-b5dd-95163990559b
+		summarizeBy: none
+		sourceColumn: bmp_provavel
+
+	column linha_duplicada
+		dataType: boolean
+		lineageTag: accd3237-511c-5e6d-aee4-ef63aeb483f8
+		summarizeBy: none
+		sourceColumn: linha_duplicada
+
+	column nome_variante
+		dataType: boolean
+		lineageTag: 054f2e86-094d-58ec-a7dc-f4405f23fe50
+		summarizeBy: none
+		sourceColumn: nome_variante
+
+	column nome_artefato_extracao
+		dataType: boolean
+		lineageTag: a9478206-d1df-5db8-ae8a-9fcb477c77f2
+		summarizeBy: none
+		sourceColumn: nome_artefato_extracao
+
+	column nome_digitacao
+		dataType: boolean
+		lineageTag: 1c8bf749-43a1-5b16-8b73-0c99cb8a61ec
+		summarizeBy: none
+		sourceColumn: nome_digitacao
+
+	column bmp_ausente_legitimo
+		dataType: boolean
+		lineageTag: 38d710b1-d8bb-5065-9a91-1247459f9913
+		summarizeBy: none
+		sourceColumn: bmp_ausente_legitimo
+
+	column bmp_ausente_erro
+		dataType: boolean
+		lineageTag: d3bccd7c-358c-5269-b968-8c6c373b7d0c
+		summarizeBy: none
+		sourceColumn: bmp_ausente_erro
+
+	column bmp_inexistente
+		dataType: boolean
+		lineageTag: 5853135a-c50f-5ec2-a343-99de51229c84
+		summarizeBy: none
+		sourceColumn: bmp_inexistente
+
+	column bmp_trocado_existente
+		dataType: boolean
+		lineageTag: 405f5ea5-0eae-5371-aab0-6af560567f5a
+		summarizeBy: none
+		sourceColumn: bmp_trocado_existente
+
+	column distancia_bmp_vizinho
+		dataType: int64
+		formatString: 0
+		lineageTag: a49c8c36-d00f-5e7d-a259-4653d1533aa4
+		summarizeBy: none
+		sourceColumn: distancia_bmp_vizinho
+
+	column serie_divergente
+		dataType: boolean
+		lineageTag: dd993754-a6be-5b0a-82f8-5cf4eed4190a
+		summarizeBy: none
+		sourceColumn: serie_divergente
+
+	column local_variante
+		dataType: boolean
+		lineageTag: a6c22d09-4623-5ddf-9417-e08466a85e97
+		summarizeBy: none
+		sourceColumn: local_variante
+
+	column divergencia_historico
+		dataType: boolean
+		lineageTag: a6e9720c-09cc-5083-8ee4-6b46f4f18933
+		summarizeBy: none
+		sourceColumn: divergencia_historico
+
+	column baixa_com_detentor
+		dataType: boolean
+		lineageTag: 394c6ebf-27d5-56b4-90d0-0e659187c376
+		summarizeBy: none
+		sourceColumn: baixa_com_detentor
+
+	column status_no_cadastro
+		dataType: string
+		lineageTag: 35864e76-4146-5d28-ae74-cd14af57f38c
+		summarizeBy: none
+		sourceColumn: status_no_cadastro
+
+	column local_no_cadastro
+		dataType: string
+		lineageTag: 58328601-5861-5f4c-91e0-93268bb35878
+		summarizeBy: none
+		sourceColumn: local_no_cadastro
+
+	column detentor_no_cadastro
+		dataType: string
+		lineageTag: 0507332b-4ba7-58c7-abbd-692577022c86
+		summarizeBy: none
+		sourceColumn: detentor_no_cadastro
+
+	/// Planilha diz localizado ou descarga, mas o histórico mostra a unidade com uma pessoa.
+	column risco_cautela = conferencia[divergencia_historico] || conferencia[baixa_com_detentor]
+		dataType: boolean
+		lineageTag: ea6ede59-2762-56b7-a5c3-cb4a1becf646
+		summarizeBy: none
+
+	partition conferencia = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado"),
+				    Tabela = Fonte{[Schema = "analise", Item = "vw_conferencia_planilha"]}[Data]
+				in
+				    Tabela
+

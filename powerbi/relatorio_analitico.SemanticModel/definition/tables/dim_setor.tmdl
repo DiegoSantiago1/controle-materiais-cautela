@@ -1,0 +1,24 @@
+table dim_setor
+	lineageTag: 55f5b81b-244e-5ec0-b1fe-53842a221280
+
+	column sigla
+		dataType: string
+		lineageTag: 790c87cf-9305-5799-8835-a957f1001990
+		summarizeBy: none
+		sourceColumn: sigla
+
+	column nome
+		dataType: string
+		lineageTag: b7dd1aae-787a-5c38-9d01-181238c5c6fb
+		summarizeBy: none
+		sourceColumn: nome
+
+	partition dim_setor = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado"),
+				    Tabela = Fonte{[Schema = "bi", Item = "dim_setor"]}[Data]
+				in
+				    Tabela
+

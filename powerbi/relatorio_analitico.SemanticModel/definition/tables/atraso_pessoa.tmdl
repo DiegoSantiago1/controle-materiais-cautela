@@ -1,0 +1,86 @@
+table atraso_pessoa
+	lineageTag: 09af3cc5-7a2f-5cca-adec-cc3cfd4362be
+
+	column pessoa_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 782f1cda-4465-5299-aa76-3d7119f5301e
+		summarizeBy: none
+		sourceColumn: pessoa_id
+
+	column matricula
+		dataType: string
+		lineageTag: b0cda20b-b4ef-57a7-8280-ff4d7c3c6628
+		summarizeBy: none
+		sourceColumn: matricula
+
+	column pessoa
+		dataType: string
+		lineageTag: ab3b8f61-0d38-51f7-8459-9add16e6687f
+		summarizeBy: none
+		sourceColumn: pessoa
+
+	column setor
+		dataType: string
+		lineageTag: c78d374d-860b-5a00-b3ad-a5c2378176f5
+		summarizeBy: none
+		sourceColumn: setor
+
+	column cautelas
+		dataType: int64
+		formatString: 0
+		lineageTag: 8b2d2a44-fd2a-5ac1-aa90-cd7f15f8806b
+		summarizeBy: none
+		sourceColumn: cautelas
+
+	column atrasadas
+		dataType: int64
+		formatString: 0
+		lineageTag: 8e762617-011a-5c53-bb04-3cb744592f0d
+		summarizeBy: none
+		sourceColumn: atrasadas
+
+	column taxa_atraso
+		dataType: double
+		formatString: 0.0%
+		lineageTag: b7ab3b18-4f7a-5e78-a403-81612381caf8
+		summarizeBy: none
+		sourceColumn: taxa_atraso
+
+	column mediana_dias_atraso
+		dataType: double
+		formatString: #,0.0
+		lineageTag: 5ec334cc-5e43-53a5-82aa-bb19c4dd23d1
+		summarizeBy: none
+		sourceColumn: mediana_dias_atraso
+
+	column ainda_fora
+		dataType: int64
+		formatString: 0
+		lineageTag: f51cbb9b-976b-59cf-9243-dfe2ea272c1d
+		summarizeBy: none
+		sourceColumn: ainda_fora
+
+	column posicao_geral
+		dataType: int64
+		formatString: 0
+		lineageTag: f41af1c5-9eb0-5f77-a034-faa49520a28d
+		summarizeBy: none
+		sourceColumn: posicao_geral
+
+	column posicao_no_setor
+		dataType: int64
+		formatString: 0
+		lineageTag: 872669c3-e5a5-5f77-9735-13442af440b0
+		summarizeBy: none
+		sourceColumn: posicao_no_setor
+
+	partition atraso_pessoa = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado"),
+				    Tabela = Fonte{[Schema = "analise", Item = "vw_atraso_pessoa"]}[Data]
+				in
+				    Tabela
+

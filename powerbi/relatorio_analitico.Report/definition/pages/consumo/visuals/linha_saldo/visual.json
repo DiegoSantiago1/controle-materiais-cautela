@@ -1,0 +1,94 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "linha_saldo",
+  "position": {
+    "x": 328,
+    "y": 188,
+    "z": 4000,
+    "width": 936,
+    "height": 300,
+    "tabOrder": 4000
+  },
+  "visual": {
+    "visualType": "lineChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_calendario"
+                    }
+                  },
+                  "Property": "data"
+                }
+              },
+              "queryRef": "dim_calendario.data",
+              "nativeQueryRef": "data",
+              "displayName": "Dia"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "Saldo no fim do período"
+                }
+              },
+              "queryRef": "Medidas.Saldo no fim do período",
+              "nativeQueryRef": "Saldo no fim do período",
+              "displayName": "Saldo"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "Estoque mínimo"
+                }
+              },
+              "queryRef": "Medidas.Estoque mínimo",
+              "nativeQueryRef": "Estoque mínimo",
+              "displayName": "Mínimo"
+            }
+          ]
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Saldo por dia e o estoque mínimo'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

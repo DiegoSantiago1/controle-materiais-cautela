@@ -2,7 +2,7 @@
 
 **Análise de dados do controle de material de uma unidade logística (dados fictícios): carga patrimonial, cautelas, uso de equipamentos e estoque de consumo, com PostgreSQL, SQL analítico, Python (Pandas/NumPy) e Power BI. Mais um sistema web de controle (retirada, devolução, posse, estoque e administração, no computador e no celular) que grava pelas mesmas regras do banco.**
 
-> Projeto 2 do meu portfólio de Dados, na sequência do [Painel de Vendas](https://github.com/DiegoSantiago1/analise-vendas-concessionaria). Dados, análises, sistema e relatório operacional no Power BI concluídos; o relatório analítico (Parte B do guia) é a próxima etapa.
+> Projeto 2 do meu portfólio de Dados, na sequência do [Painel de Vendas](https://github.com/DiegoSantiago1/analise-vendas-concessionaria). Dados, análises, sistema e os dois relatórios do Power BI (operacional e analítico) concluídos.
 
 ## O problema
 
@@ -139,7 +139,7 @@ As decisões, com contexto, alternativas e o que foi medido, estão em [docs/DEC
 | SQL | CTEs, window functions (`LAG`, `LEAD`, somas acumuladas, `RANK`), *gaps and islands*, `LATERAL` |
 | Python, NumPy, Pandas | gerador de dados, intervalo de Wilson, ponto de reposição, avaliação contra o gabarito, notebooks |
 | Alembic | migrações versionadas com SQL escrito à mão (16 migrações) |
-| Power BI | relatório operacional como projeto PBIP versionado (modelo em TMDL, páginas em PBIR) e guia do analítico |
+| Power BI | relatórios operacional e analítico como projetos PBIP versionados (modelo em TMDL, páginas em PBIR) |
 | Node 24, TypeScript, Express 5, `pg` | API do sistema, com SQL escrito à mão |
 | HTML, CSS, JavaScript | tela responsiva, módulos ES por página, sem framework nem etapa de build |
 | pytest, ruff, mypy | testes, lint e tipos (Python) |
@@ -222,11 +222,10 @@ tests/                        574 testes (Python)
 api/                          API Node/TypeScript (rotas por assunto) e 133 testes (node:test)
 web/                          tela (HTML, CSS, JavaScript; uma página por módulo em js/paginas/)
 docs/                         plano, decisões técnicas, guia e tema do Power BI
-powerbi/                      relatório operacional (PBIP: abre no Power BI Desktop)
+powerbi/                      relatórios operacional e analítico (PBIP: abrem no Power BI Desktop)
 ```
 
 ## Limitações e próximos passos
 
-- **Relatório Power BI:** o operacional está montado (`powerbi/`, 6 páginas conferidas com SQL); o analítico tem modelo, medidas e números de referência no guia, e a montagem é a próxima etapa.
 - **Aplicação:** estorno pela tela e devolução feita por outra pessoa (em nome do detentor) ainda não existem; o estorno continua só pela função do banco. O limite de tentativas de login fica na memória de um processo, e a API roda só em `127.0.0.1`, sem HTTPS (para publicar, entraria um proxy com TLS e o cookie `Secure`).
 - Os padrões dos dados foram plantados. As análises foram validadas por conseguirem reencontrá-los, o que mostra que o método funciona, mas não substitui dados reais.

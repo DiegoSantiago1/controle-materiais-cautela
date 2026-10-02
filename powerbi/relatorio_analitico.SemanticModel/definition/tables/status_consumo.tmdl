@@ -1,0 +1,77 @@
+table status_consumo
+	lineageTag: bf0455f3-158c-5ba1-a070-e0aba07b47c5
+
+	column codigo
+		dataType: string
+		lineageTag: e95232df-204d-53da-8ce9-c4525eabf4b7
+		summarizeBy: none
+		sourceColumn: codigo
+
+	column nome
+		dataType: string
+		lineageTag: 4b9b7eaf-7475-5c33-8480-98960cd59fec
+		summarizeBy: none
+		sourceColumn: nome
+
+	column subcategoria
+		dataType: string
+		lineageTag: 60afacda-b676-556d-b6c9-dadf015cbfcc
+		summarizeBy: none
+		sourceColumn: subcategoria
+
+	column unidade_medida
+		dataType: string
+		lineageTag: d1a63aec-8991-5853-bb24-09df55b34a1d
+		summarizeBy: none
+		sourceColumn: unidade_medida
+
+	column custo_unitario
+		dataType: double
+		formatString: R\$ #,0.00
+		lineageTag: f917dcb9-05e1-5d3e-9b0c-04a5400ede41
+		summarizeBy: none
+		sourceColumn: custo_unitario
+
+	column quantidade
+		dataType: int64
+		formatString: 0
+		lineageTag: 51aa6b59-ab21-5950-b657-1da33faea7ff
+		summarizeBy: none
+		sourceColumn: quantidade
+
+	column estoque_minimo
+		dataType: int64
+		formatString: 0
+		lineageTag: dabb856b-235f-591d-b3ff-bc26722756e6
+		summarizeBy: none
+		sourceColumn: estoque_minimo
+
+	column estoque_maximo
+		dataType: int64
+		formatString: 0
+		lineageTag: 9dbdad5f-bfff-53d1-851f-1b45696a4a43
+		summarizeBy: none
+		sourceColumn: estoque_maximo
+
+	column status
+		dataType: string
+		lineageTag: 700e95bb-bbf1-5c89-b301-8d24a43ff4e2
+		summarizeBy: none
+		sourceColumn: status
+
+	column valor_acima_do_maximo
+		dataType: double
+		formatString: R\$ #,0
+		lineageTag: 82b62531-d949-5659-963e-9667b5803a5b
+		summarizeBy: none
+		sourceColumn: valor_acima_do_maximo
+
+	partition status_consumo = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("127.0.0.1:5432", "almoxarifado"),
+				    Tabela = Fonte{[Schema = "analise", Item = "vw_status_consumo"]}[Data]
+				in
+				    Tabela
+

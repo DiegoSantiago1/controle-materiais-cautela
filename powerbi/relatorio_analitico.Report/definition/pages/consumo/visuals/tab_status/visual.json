@@ -1,0 +1,123 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+  "name": "tab_status",
+  "position": {
+    "x": 796,
+    "y": 500,
+    "z": 6000,
+    "width": 468,
+    "height": 208,
+    "tabOrder": 6000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "status_consumo"
+                    }
+                  },
+                  "Property": "nome"
+                }
+              },
+              "queryRef": "status_consumo.nome",
+              "nativeQueryRef": "nome",
+              "displayName": "Material"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "status_consumo"
+                    }
+                  },
+                  "Property": "quantidade"
+                }
+              },
+              "queryRef": "status_consumo.quantidade",
+              "nativeQueryRef": "quantidade",
+              "displayName": "Saldo"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "status_consumo"
+                    }
+                  },
+                  "Property": "estoque_minimo"
+                }
+              },
+              "queryRef": "status_consumo.estoque_minimo",
+              "nativeQueryRef": "estoque_minimo",
+              "displayName": "Mínimo"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "status_consumo"
+                    }
+                  },
+                  "Property": "status"
+                }
+              },
+              "queryRef": "status_consumo.status",
+              "nativeQueryRef": "status",
+              "displayName": "Situação"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "status_consumo"
+                  }
+                },
+                "Property": "status"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": false
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Situação de todos os itens em 31/08'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
