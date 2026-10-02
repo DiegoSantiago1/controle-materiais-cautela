@@ -125,7 +125,7 @@ As decisões, com contexto, alternativas e o que foi medido, estão em [docs/DEC
 ## Qualidade
 
 - **574 testes em Python** (`pytest`): integridade do schema com entradas hostis, regras de movimentação, retirada e devolução por quantidade, administração e auditoria, sessão válida nas funções da aplicação, concorrência com COMMIT real, reprodutibilidade do gerador e da atividade simulada, os padrões P1 a P16, fidelidade campo a campo da carga, cada regra de qualidade (injetando a violação), cada análise e as permissões do Power BI e da API.
-- **133 testes da API** (`node:test`, por HTTP, como o navegador): login e sessão, força bruta, a matriz de permissões (o equipamentista recebe 403 em toda rota de administrador), pedidos hostis (ids falsos, listas com repetição, JSON quebrado, caractere nulo, corpo gigante, injeção de SQL), CSRF, cabeçalhos de segurança, as regras chegando como status HTTP, retirada com vários materiais tudo-ou-nada e 10 retiradas simultâneas da mesma unidade (passa exatamente uma).
+- **134 testes da API** (`node:test`, por HTTP, como o navegador): login e sessão, força bruta, a matriz de permissões (o equipamentista recebe 403 em toda rota de administrador), pedidos hostis (ids falsos, listas com repetição, JSON quebrado, caractere nulo, corpo gigante, injeção de SQL), CSRF, cabeçalhos de segurança, as regras chegando como status HTTP, retirada com vários materiais tudo-ou-nada e 10 retiradas simultâneas da mesma unidade (passa exatamente uma).
 - **Navegador de verdade** (Playwright, Chromium, 1440×900 e 390×844): os fluxos de balcão e de administração sem nenhum erro de console, inclusive XSS e queda de sessão depois de troca de perfil.
 - Banco de testes separado, recriado pelas migrações a cada execução: sobe, desce e sobe de novo, o que também testa os *downgrades*.
 - `ruff` (lint, formatação e regras de segurança, inclusive nos notebooks) e `mypy --strict`.
@@ -190,6 +190,12 @@ npm run definir-senha -- enzo.04      # EQUIPAMENTISTA (heitor.09 é CONSULTA)
 npm start
 ```
 
+No Windows, se o PowerShell recusar o `npm` ("a execução de scripts foi desabilitada"), libere scripts locais só para o seu usuário: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+
+### Os relatórios do Power BI
+
+Com os bancos carregados (passos 6 e 7): abra `powerbi/relatorio_operacional.pbip` ou `powerbi/relatorio_analitico.pbip` no Power BI Desktop, clique em **Atualizar agora** e informe o usuário de leitura do `.env` (`ALMOX_BI_USER`/`ALMOX_BI_PASSWORD`). Detalhes, medidas e números de referência em [docs/POWERBI.md](docs/POWERBI.md).
+
 Testes da API: `python -m almox.migracoes teste` (uma vez, deixa o banco de testes no schema atual) e depois `npm run verificar` (lint, tipos e testes).
 
 Os notebooks são salvos já executados. Para reexecutar um deles (com o banco carregado): `jupyter nbconvert --to notebook --execute --inplace notebooks/01_conferencia.ipynb`. Para rodar as checagens de qualidade: `SELECT dq.executar();` e depois `SELECT * FROM dq.vw_ultima_execucao;`.
@@ -219,7 +225,7 @@ src/almox/atividade.py        setembro de uso simulado (plano puro + execução 
 src/almox/analise/            conferência, cautela, uso e consumo (usados pelos notebooks)
 notebooks/                    as quatro análises, executadas, com insights
 tests/                        574 testes (Python)
-api/                          API Node/TypeScript (rotas por assunto) e 133 testes (node:test)
+api/                          API Node/TypeScript (rotas por assunto) e 134 testes (node:test)
 web/                          tela (HTML, CSS, JavaScript; uma página por módulo em js/paginas/)
 docs/                         plano, decisões técnicas, guia e tema do Power BI
 powerbi/                      relatórios operacional e analítico (PBIP: abrem no Power BI Desktop)

@@ -2,7 +2,7 @@
   "name": "almox-api",
   "version": "1.0.0",
   "private": true,
-  "description": "API da tela do equipamentista (Controle de Materiais e Cautela, dados fictícios): retirada e devolução pelas mesmas funções de regra do banco.",
+  "description": "API do sistema de Controle de Materiais e Cautela (dados fictícios): balcão, estoque e administração pelas mesmas funções de regra do banco.",
   "type": "module",
   "engines": {
     "node": ">=24"
