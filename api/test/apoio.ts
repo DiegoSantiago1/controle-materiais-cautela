@@ -98,8 +98,9 @@ async function criarCenario(dono: pg.Pool): Promise<Cenario> {
     unico(() =>
       inserir(
         dono,
-        `INSERT INTO core.pessoa (matricula, nome, setor_id, data_entrada, data_saida)
-         VALUES ($1, $2, $3, DATE '2025-01-01', $4::date) RETURNING id`,
+        `INSERT INTO core.pessoa (matricula, nome, setor_id, data_entrada, data_saida,
+                                  posto_graduacao, nome_guerra)
+         VALUES ($1, $2, $3, DATE '2025-01-01', $4::date, 'SGT', $2) RETURNING id`,
         [`9${digitos(6)}`, nome, setor, saida],
       ),
     );

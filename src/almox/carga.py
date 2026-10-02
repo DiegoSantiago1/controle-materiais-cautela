@@ -115,14 +115,16 @@ class Carga:
         for linha in _ler(self.pasta, "pessoas.csv"):
             self.pessoa[linha["matricula"]] = _inserir(
                 c,
-                "INSERT INTO core.pessoa (matricula, nome, setor_id, data_entrada, data_saida) "
-                "VALUES (%s, %s, %s, %s, %s) RETURNING id",
+                "INSERT INTO core.pessoa (matricula, nome, setor_id, data_entrada, data_saida, "
+                "posto_graduacao, nome_guerra) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id",
                 [
                     linha["matricula"],
                     linha["nome"],
                     self.setor[linha["setor"]],
                     linha["data_entrada"],
                     _ou_nulo(linha["data_saida"]),
+                    linha["posto_graduacao"],
+                    linha["nome_guerra"],
                 ],
             )
         for linha in _ler(self.pasta, "usuarios.csv"):

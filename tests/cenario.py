@@ -53,9 +53,17 @@ def _pessoa(con: Conexao, setor: int, entrada: date, saida: date | None = None) 
     n = next(_sequencia)
     return _inserir(
         con,
-        "INSERT INTO core.pessoa (matricula, nome, setor_id, data_entrada, data_saida) "
-        "VALUES (%(m)s, %(n)s, %(s)s, %(e)s, %(x)s) RETURNING id",
-        {"m": f"{9000000 + n}", "n": f"Pessoa Teste {n}", "s": setor, "e": entrada, "x": saida},
+        "INSERT INTO core.pessoa (matricula, nome, setor_id, data_entrada, data_saida, "
+        "posto_graduacao, nome_guerra) "
+        "VALUES (%(m)s, %(n)s, %(s)s, %(e)s, %(x)s, 'S1', %(g)s) RETURNING id",
+        {
+            "m": f"{9000000 + n}",
+            "n": f"Pessoa Teste {n}",
+            "s": setor,
+            "e": entrada,
+            "x": saida,
+            "g": f"Teste {n}",
+        },
     )
 
 

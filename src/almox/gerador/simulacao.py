@@ -26,6 +26,7 @@ from datetime import date, datetime, time, timedelta
 import numpy as np
 
 from almox.gerador import catalogo as cat
+from almox.gerador.postos import atribuir_postos
 
 SEMPRE = datetime(9999, 1, 1, tzinfo=cat.FUSO)  # "ocupada até sempre"
 
@@ -39,6 +40,9 @@ class Pessoa:
     data_entrada: date
     data_saida: date | None
     perfil: str = "pontual"  # P2: pontual, ocasional ou reincidente
+    # Atribuídos depois da simulação, com sorteio próprio (almox.gerador.postos).
+    posto: str = ""
+    nome_guerra: str = ""
 
     def presente(self, dia: date) -> bool:
         return self.data_entrada <= dia and (self.data_saida is None or dia < self.data_saida)
@@ -903,4 +907,6 @@ def inicio_do_periodo(ancora: date) -> date:
 
 
 def gerar(semente: int = cat.SEMENTE_PADRAO, ancora: str = cat.ANCORA_PADRAO) -> Dataset:
-    return Simulacao(semente, date.fromisoformat(ancora)).executar()
+    dataset = Simulacao(semente, date.fromisoformat(ancora)).executar()
+    atribuir_postos(dataset.pessoas, dataset.usuarios, semente)
+    return dataset

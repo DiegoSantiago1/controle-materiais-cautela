@@ -100,8 +100,19 @@ def gravar(dataset: Dataset, planilha: list[Linha], pasta: Path) -> dict[str, ob
     )
     _gravar_csv(
         pasta / "pessoas.csv",
-        ["matricula", "nome", "setor", "data_entrada", "data_saida"],
-        [(p.matricula, p.nome, p.setor, p.data_entrada, p.data_saida) for p in dataset.pessoas],
+        [
+            "matricula",
+            "nome",
+            "setor",
+            "data_entrada",
+            "data_saida",
+            "posto_graduacao",
+            "nome_guerra",
+        ],
+        [
+            (p.matricula, p.nome, p.setor, p.data_entrada, p.data_saida, p.posto, p.nome_guerra)
+            for p in dataset.pessoas
+        ],
     )
     _gravar_csv(
         pasta / "usuarios.csv",

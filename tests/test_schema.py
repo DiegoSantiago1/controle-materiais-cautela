@@ -38,8 +38,8 @@ def test_nome_unico_sem_diferenciar_maiusculas(bd: Conexao) -> None:
 def test_matricula_com_formato_invalido(bd: Conexao, base: Base, matricula: str) -> None:
     with espera_erro(bd, CHECK):
         bd.execute(
-            "INSERT INTO core.pessoa (matricula, nome, setor_id, data_entrada) "
-            "VALUES (%s, 'Fulano', %s, '2020-01-01')",
+            "INSERT INTO core.pessoa (matricula, nome, setor_id, data_entrada, "
+            "posto_graduacao, nome_guerra) VALUES (%s, 'Fulano', %s, '2020-01-01', 'S1', 'Fulano')",
             [matricula, base.setor],
         )
 
@@ -47,8 +47,9 @@ def test_matricula_com_formato_invalido(bd: Conexao, base: Base, matricula: str)
 def test_saida_antes_da_entrada(bd: Conexao, base: Base) -> None:
     with espera_erro(bd, CHECK):
         bd.execute(
-            "INSERT INTO core.pessoa (matricula, nome, setor_id, data_entrada, data_saida) "
-            "VALUES ('1111111', 'Fulano', %s, '2020-01-01', '2019-12-31')",
+            "INSERT INTO core.pessoa (matricula, nome, setor_id, data_entrada, data_saida, "
+            "posto_graduacao, nome_guerra) "
+            "VALUES ('1111111', 'Fulano', %s, '2020-01-01', '2019-12-31', 'S1', 'Fulano')",
             [base.setor],
         )
 
@@ -60,8 +61,9 @@ def test_saida_antes_da_entrada(bd: Conexao, base: Base) -> None:
 def test_usuario_login_e_perfil_validos(bd: Conexao, base: Base, login: str, perfil: str) -> None:
     pessoa = valor(
         bd,
-        "INSERT INTO core.pessoa (matricula, nome, setor_id, data_entrada) "
-        "VALUES ('2222222', 'Beltrano', %(s)s, '2020-01-01') RETURNING id",
+        "INSERT INTO core.pessoa (matricula, nome, setor_id, data_entrada, posto_graduacao, "
+        "nome_guerra) VALUES ('2222222', 'Beltrano', %(s)s, '2020-01-01', 'S1', 'Beltrano') "
+        "RETURNING id",
         {"s": base.setor},
     )
     with espera_erro(bd, CHECK):
