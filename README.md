@@ -2,15 +2,15 @@
 
 **Análise de dados do controle de material de uma unidade logística (dados fictícios): carga patrimonial, cautelas, uso de equipamentos e estoque de consumo, com PostgreSQL, SQL analítico, Python (Pandas/NumPy) e Power BI. Mais um sistema web de controle (retirada, devolução, posse, estoque e administração, no computador e no celular) que grava pelas mesmas regras do banco.**
 
-> Projeto 2 do meu portfólio de Dados, na sequência do [Painel de Vendas](https://github.com/DiegoSantiago1/analise-vendas-concessionaria). **Projeto real:** desenvolvi o sistema de cautelas da seção de material em que trabalhei na Força Aérea, onde ele substituiu o controle no papel e continua em uso. Esta é a versão reconstruída para o portfólio, com dados fictícios.
+> Projeto 2 do meu portfólio de Dados, na sequência do [Painel de Vendas](https://github.com/DiegoSantiago1/analise-vendas-concessionaria). **Projeto real:** desenvolvi o sistema de controle de cautelas da seção de material em que trabalhei na Força Aérea, que segue em uso, e os relatórios de estoque apresentados nas reuniões com os superiores. Esta é a versão reconstruída para o portfólio, com dados fictícios.
 >
 > **[▶ Abrir a demo online](https://diegosantiago1.github.io/Portifolio/projetos/controle-materiais/)**: o sistema rodando no navegador, com dados fictícios (o que você fizer fica só no seu navegador).
 
 ## O problema
 
-Trabalhei na Força Aérea Brasileira em funções administrativas, incluindo controle de materiais e conferência de carga patrimonial. Na seção de material em que eu trabalhava, as cautelas eram feitas **no papel e na caneta**. **Desenvolvi para a seção um sistema de controle de cautelas, que substituiu o papel e continua em uso**, e montei os relatórios usados nas **reuniões com os superiores** para acompanhar o estoque. Este repositório é a **reconstrução desse trabalho para o portfólio**, com tecnologias de mercado e **dados 100% fictícios**: nada do sistema original nem da organização está aqui.
+Trabalhei na Força Aérea Brasileira em funções administrativas, incluindo controle de materiais e conferência de carga patrimonial. Na seção de material em que eu trabalhava, **desenvolvi o sistema de controle de cautelas, que segue em uso**: quem retirou cada material, até quando deve devolver e o que há em estoque. Também montei os relatórios apresentados nas **reuniões com os superiores** para acompanhar o estoque. Este repositório é a **reconstrução desse trabalho para o portfólio**, com tecnologias de mercado e **dados 100% fictícios**: nada do sistema original nem da organização está aqui.
 
-Os problemas que motivaram o sistema se repetem em qualquer controle de material feito no papel ou em planilha: o mesmo item escrito de vários jeitos, número de patrimônio em branco ou digitado errado, material que a planilha diz estar no depósito mas está emprestado com alguém, ferramenta que nunca volta no prazo, item de consumo que acaba antes da compra chegar.
+Os problemas que um sistema assim resolve se repetem em qualquer controle de material: o mesmo item escrito de vários jeitos, número de patrimônio em branco ou digitado errado, material que a planilha diz estar no depósito mas está emprestado com alguém, ferramenta que nunca volta no prazo, item de consumo que acaba antes da compra chegar.
 
 Este projeto transforma essa rotina em quatro perguntas de negócio, respondidas com dados:
 
