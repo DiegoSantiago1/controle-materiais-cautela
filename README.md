@@ -3,8 +3,15 @@
 **Análise de dados do controle de material de uma unidade logística (dados fictícios): carga patrimonial, cautelas, uso de equipamentos e estoque de consumo, com PostgreSQL, SQL analítico, Python (Pandas/NumPy) e Power BI. Mais um sistema web de controle (retirada, devolução, posse, estoque e administração, no computador e no celular) que grava pelas mesmas regras do banco.**
 
 > Projeto 2 do meu portfólio de Dados, na sequência do [Painel de Vendas](https://github.com/DiegoSantiago1/analise-vendas-concessionaria). **Projeto real:** desenvolvi o sistema de controle de cautelas da seção de material em que trabalhei na Força Aérea, que segue em uso, e os relatórios de estoque apresentados nas reuniões com os superiores. Esta é a versão reconstruída para o portfólio, com dados fictícios.
->
-> **[▶ Abrir a demo online](https://diegosantiago1.github.io/Portifolio/projetos/controle-materiais/)**: o sistema rodando no navegador, com dados fictícios (o que você fizer fica só no seu navegador).
+
+## 🔗 Acessar o projeto
+
+[![Abrir o projeto](https://img.shields.io/badge/%E2%96%B6%20Abrir%20o%20projeto-EA580C?style=for-the-badge)](https://diegosantiago1.github.io/Portifolio/projetos/controle-materiais/)
+[![Ver no portfólio](https://img.shields.io/badge/Ver%20no%20portf%C3%B3lio-1F2937?style=for-the-badge&logo=googlechrome&logoColor=white)](https://diegosantiago1.github.io/Portifolio/#projetos)
+
+**Link direto:** https://diegosantiago1.github.io/Portifolio/projetos/controle-materiais/
+
+O sistema roda no navegador, com dados fictícios, sem instalar nada. O que você fizer fica só no seu navegador.
 
 ## O problema
 
