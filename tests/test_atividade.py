@@ -94,9 +94,10 @@ def test_ha_posse_vencida_no_fim_do_mes(plano: list[atv.Evento]) -> None:
     abertas = Counter(
         e.finalidade for e in plano if isinstance(e, atv.Retirada) and e.operacao not in devolvidas
     )
-    assert abertas["Desfile de 7 de Setembro"] == 2
-    assert abertas["Exercício de campanha"] == 2
+    assert abertas["Desfile de 7 de Setembro"] == 1
+    assert abertas["Exercício de campanha"] == 1
     assert abertas["Serviço de dia"] == 4  # o serviço do último dia
+    assert abertas["Estágio de sobrevivência"] == 16  # ainda em campo, dentro do prazo
 
 
 def test_poucos_militares_e_recusado() -> None:
@@ -143,7 +144,18 @@ def test_atividade_deixa_o_que_a_tela_precisa_mostrar(
         "WHERE prazo < now() AND finalidade IN ('Desfile de 7 de Setembro', "
         "'Exercício de campanha')",
     )
-    assert vencidas == 4
+    assert vencidas == 2
+    # No retrato do fim do mês (o último atendimento simulado), a maior parte da posse está
+    # dentro do prazo, como numa unidade real: vencida é exceção (10 a 20% das unidades).
+    # Só o que aconteceu até o fim da simulação: outros testes gravam movimentações "agora".
+    vencidas_no_retrato = valor(
+        con,
+        "WITH ate_o_fim AS (SELECT max(ocorrida_em) AS retrato FROM core.movimentacao "
+        "WHERE ocorrida_em < '2026-10-02') "
+        "SELECT avg((prazo < retrato)::int) FROM core.vw_posse, ate_o_fim "
+        "WHERE retirada_em <= retrato",
+    )
+    assert vencidas_no_retrato is not None and 0.10 <= float(vencidas_no_retrato) <= 0.20
     em_manutencao = valor(
         con,
         "SELECT count(*) FROM core.unidade_patrimonial "

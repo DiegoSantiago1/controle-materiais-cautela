@@ -265,7 +265,9 @@ export async function atualizarContagens() {
     contagens = contadores;
     const vencidas = $("contagem-vencidas");
     if (vencidas) {
-      vencidas.textContent = String(contadores.vencidas);
+      // Mostra "N vencidas", e não só o número: ao lado de "Em posse", um número solto
+      // parece o total em posse (que é outro, o do card do início).
+      vencidas.textContent = `${contadores.vencidas} vencida${contadores.vencidas === 1 ? "" : "s"}`;
       vencidas.hidden = contadores.vencidas === 0;
       vencidas.title = `${contadores.vencidas} posse(s) vencida(s)`;
     }

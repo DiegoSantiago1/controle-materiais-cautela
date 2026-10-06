@@ -257,3 +257,13 @@ aplicada sobre a demanda do mês de pico, deixou a maioria dos bem calibrados se
 **Por quê.** Uma medida corrigida aparece no `git diff` como uma linha de DAX, revisável como qualquer código; quem clona o repositório abre o relatório e atualiza contra o próprio banco; o repositório não carrega dados.
 
 **Verificação.** Aberto e atualizado no Power BI Desktop 2.158 (set/2026); cada cartão conferido com SQL equivalente no banco. A conferência achou três erros de DAX, corrigidos e explicados no guia: filtro de `finalidade` sem `KEEPFILTERS` (todas as barras com o total), `RANKX` que ignorava a coluna de ordenação do militar (top 15 com mais de 15) e empate com `Dense` (top 10 com 11).
+
+## D30. Retrato da demo no fim do mês simulado, com a posse quase toda no prazo
+
+**Contexto.** Uma revisão externa (05/10/2026) viu na demo 66 de 67 posses vencidas e o menu "Em posse 66" ao lado do cartão "Em posse agora 67". Medido no retrato: as 67 unidades estavam vencidas por dois motivos. (1) O exportador usava `now()` do banco como "agora" do retrato, mas a simulação termina em 01/10: tirado no dia seguinte, o retrato mostrava vencido até o serviço de dia, que só volta na troca da manhã. (2) A simulação deixava quatro posses abertas de propósito (dois militares do desfile e dois da campanha), e quase nada mais ficava com alguém no fim do mês. O "66" do menu era a contagem de vencidas, sem rótulo.
+
+**Decisão.** O "agora" do retrato passa a ser o último atendimento simulado (`max(ocorrida_em)`). A simulação deixa um militar do desfile e um da campanha sem devolver e ganha um estágio de sobrevivência (16 militares, 29/09 a 02/10) que está em campo no fim do mês, dentro do prazo. O menu mostra "N vencidas", e não só o número.
+
+**Por quê.** Numa unidade real, a posse vencida é exceção: é ela que o painel destaca para cobrar. Um retrato com tudo vencido ensina a ignorar o alerta. As posses vencidas do padrão P4 (transferidos que saem com material) continuam, porque são um achado das análises.
+
+**Verificação.** Retrato novo: 197 unidades em posse com 28 militares, 27 vencidas (13,7%). Um teste fixa essa faixa (10 a 20% vencidas no fim do mês simulado) e conta as posses abertas por finalidade (desfile 1, campanha 1, serviço de dia 4, estágio 16). O banco das análises e do Power BI não muda (a atividade só roda no banco da aplicação, D23).

@@ -8,9 +8,11 @@ mês seguinte de uso, com a rotina de uma unidade pequena:
 - treino de controle de distúrbios (terça e quinta, 13:30): 16 militares, volta às 17:30;
   às vezes um escudo ou capacete volta avariado e vai para manutenção;
 - desfile de 7 de setembro: o material de formatura sai na sexta (04/09) e volta na terça
-  (08/09); três atrasam, e dois militares ainda não devolveram (posse vencida);
+  (08/09); quatro atrasam, e um militar ainda não devolveu (posse vencida);
 - semana de salto (15 a 17/09) e exercício de campanha (21 a 25/09), com avarias,
-  um item inservível e duas posses ainda abertas;
+  um item inservível e uma posse ainda aberta (vencida);
+- estágio de sobrevivência (29/09 a 02/10): 16 militares com o material de campanha, ainda
+  em campo no fim do mês, dentro do prazo (a maior parte da posse é assim, como na vida real);
 - EPI para as tarefas do dia (dias úteis), reposição de pilhas e de luz química, um lote
   novo de colete tático e o retorno da manutenção (o reparo leva de 4 a 8 dias).
 
@@ -197,6 +199,7 @@ def planejar(
     _desfile(p)
     _salto(p)
     _campanha(p)
+    _estagio(p)
     _epi_do_dia(p)
     _estoque(p)
     # Ordem estável: no mesmo minuto, devolução antes de retirada (a troca do serviço
@@ -280,9 +283,9 @@ def _desfile(p: _Planejador) -> None:
             )
         )
     for i, operacao in enumerate(operacoes):
-        if i in (5, 17):  # ainda não devolveram
+        if i == 17:  # ainda não devolveu
             continue
-        if i in (9, 21, 26):  # atrasaram
+        if i in (5, 9, 21, 26):  # atrasaram
             dia = date(2026, 9, 10 + i % 2)
             p.devolver(p.quando(dia, 9, 0, 120), p.de_servico(dia), operacao)
             continue
@@ -328,15 +331,38 @@ def _campanha(p: _Planejador) -> None:
             )
         )
     for i, operacao in enumerate(operacoes):
-        if i in (3, 14):  # ainda em posse, vencida
+        if i == 14:  # ainda em posse, vencida
             continue
-        dia = date(2026, 9, 25) if i < 16 else date(2026, 9, 28)
+        dia = date(2026, 9, 25) if i < 16 and i != 3 else date(2026, 9, 28)
         avarias: list[tuple[str, str, str]] = []
         if i in (2, 11):
             avarias.append(("CPA-0001", "AVARIADO", "Barraca com a lona rasgada"))
         if i == 8:
             avarias.append(("CPA-0004", "INSERVIVEL", "Cantil amassado e furado"))
         p.devolver(p.quando(dia, 14, 0, 180), p.de_servico(dia), operacao, avarias)
+
+
+def _estagio(p: _Planejador) -> None:
+    """Estágio de sobrevivência: sai em 29/09 e volta em 02/10, depois do fim da simulação.
+    No retrato do fim do mês o material está em campo e dentro do prazo (168 h)."""
+    ida = date(2026, 9, 29)
+    volta = date(2026, 10, 2)
+    operacoes = []
+    for i, pessoa in enumerate(p.sorteio(16)):
+        itens = [(codigo, 1) for codigo in KIT_CAMPANHA] + [("CPA-0013", 1), ("LUZ-0001", 2)]
+        if i < 3:  # instrutores
+            itens += [("CPA-0009", 1), ("CPA-0015", 1)]
+        operacoes.append(
+            p.retirar(
+                p.quando(ida, 6, 30, 45),
+                p.operadores.equipamentistas[i % 2],
+                pessoa,
+                itens,
+                "Estágio de sobrevivência",
+            )
+        )
+    for operacao in operacoes:  # fica fora do plano: a volta é depois de FIM
+        p.devolver(p.quando(volta, 15, 0, 60), p.de_servico(volta), operacao)
 
 
 def _epi_do_dia(p: _Planejador) -> None:

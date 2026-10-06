@@ -71,9 +71,12 @@ def main() -> None:
     config = carregar_config_banco().do_banco_da_aplicacao()
     dados: dict[str, Any] = {}
     with conectar(config) as con:
-        agora = con.execute("SELECT now()").fetchone()
-        if agora is None:
-            raise RuntimeError("O banco não devolveu a hora atual.")
+        # O "agora" do retrato é o último atendimento simulado, e não a hora em que o
+        # exportador roda: a simulação termina em 01/10, e um retrato tirado dias depois
+        # mostraria vencido tudo o que, na história, ainda está no prazo.
+        agora = con.execute("SELECT max(ocorrida_em) FROM core.movimentacao").fetchone()
+        if agora is None or agora[0] is None:
+            raise RuntimeError("O banco da aplicação não tem movimentações.")
         dados["gerado_em"] = agora[0]
         for nome, consulta in CONSULTAS.items():
             cursor = con.execute(consulta)
