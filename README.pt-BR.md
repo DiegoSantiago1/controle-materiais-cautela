@@ -13,6 +13,8 @@
 
 O sistema roda no navegador, com dados fictícios, sem instalar nada. O que você fizer fica só no seu navegador.
 
+[English](README.md)
+
 ## O problema
 
 Trabalhei na Força Aérea Brasileira em funções administrativas, incluindo controle de materiais e conferência de carga patrimonial. Na seção de material em que eu trabalhava, **desenvolvi o sistema de controle de cautelas, que segue em uso**: quem retirou cada material, até quando deve devolver e o que há em estoque. Também montei os relatórios apresentados nas **reuniões com os superiores** para acompanhar o estoque. Este repositório é a **reconstrução desse trabalho para o portfólio**, com tecnologias de mercado e **dados 100% fictícios**: nada do sistema original nem da organização está aqui.
@@ -138,6 +140,7 @@ As decisões, com contexto, alternativas e o que foi medido, estão em [docs/DEC
 - **574 testes em Python** (`pytest`): integridade do schema com entradas hostis, regras de movimentação, retirada e devolução por quantidade, administração e auditoria, sessão válida nas funções da aplicação, concorrência com COMMIT real, reprodutibilidade do gerador e da atividade simulada, os padrões P1 a P16, fidelidade campo a campo da carga, cada regra de qualidade (injetando a violação), cada análise e as permissões do Power BI e da API.
 - **134 testes da API** (`node:test`, por HTTP, como o navegador): login e sessão, força bruta, a matriz de permissões (o equipamentista recebe 403 em toda rota de administrador), pedidos hostis (ids falsos, listas com repetição, JSON quebrado, caractere nulo, corpo gigante, injeção de SQL), CSRF, cabeçalhos de segurança, as regras chegando como status HTTP, retirada com vários materiais tudo-ou-nada e 10 retiradas simultâneas da mesma unidade (passa exatamente uma).
 - **Navegador de verdade** (Playwright, Chromium, 1440×900 e 390×844): os fluxos de balcão e de administração sem nenhum erro de console, inclusive XSS e queda de sessão depois de troca de perfil.
+- **CI** (`.github/workflows/ci.yml`): ruff, mypy, todos os testes Python e o Biome, o `tsc` e os testes da API a cada push, contra um PostgreSQL 16 de verdade com o mesmo bootstrap e as mesmas migrações.
 - Banco de testes separado, recriado pelas migrações a cada execução: sobe, desce e sobe de novo, o que também testa os *downgrades*.
 - `ruff` (lint, formatação e regras de segurança, inclusive nos notebooks) e `mypy --strict`.
 - **Reprodutível:** mesma semente e mesma data final geram arquivos byte a byte idênticos (SHA-256 no [manifesto](data/gerado/manifesto.json)).
@@ -155,6 +158,7 @@ As decisões, com contexto, alternativas e o que foi medido, estão em [docs/DEC
 | HTML, CSS, JavaScript | tela responsiva, módulos ES por página, sem framework nem etapa de build |
 | pytest, ruff, mypy | testes, lint e tipos (Python) |
 | `node:test`, Biome, `tsc` | testes, lint e tipos (API e tela) |
+| GitHub Actions | CI com PostgreSQL de verdade |
 
 ## Como rodar
 
