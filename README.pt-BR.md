@@ -1,5 +1,7 @@
 # Controle de Materiais e Cautela
 
+[![ci](https://github.com/DiegoSantiago1/controle-materiais-cautela/actions/workflows/ci.yml/badge.svg)](https://github.com/DiegoSantiago1/controle-materiais-cautela/actions/workflows/ci.yml)
+
 **Análise de dados do controle de material de uma unidade logística (dados fictícios): carga patrimonial, cautelas, uso de equipamentos e estoque de consumo, com PostgreSQL, SQL analítico, Python (Pandas/NumPy) e Power BI. Mais um sistema web de controle (retirada, devolução, posse, estoque e administração, no computador e no celular) que grava pelas mesmas regras do banco.**
 
 > Projeto 2 do meu portfólio de Dados, na sequência do [Painel de Vendas](https://github.com/DiegoSantiago1/analise-vendas-concessionaria). **Projeto real:** desenvolvi o sistema de controle de cautelas da seção de material em que trabalhei na Força Aérea, que segue em uso, e os relatórios de estoque apresentados nas reuniões com os superiores. Esta é a versão reconstruída para o portfólio, com dados fictícios.

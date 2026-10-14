@@ -1,5 +1,7 @@
 # Equipment Custody and Stock Control
 
+[![ci](https://github.com/DiegoSantiago1/controle-materiais-cautela/actions/workflows/ci.yml/badge.svg)](https://github.com/DiegoSantiago1/controle-materiais-cautela/actions/workflows/ci.yml)
+
 **Data analysis of the equipment control of a logistics unit (fictional data): asset register, custody records ("cautelas"), equipment use and consumables stock, with PostgreSQL, analytical SQL, Python (pandas/NumPy) and Power BI. Plus a web system for the counter (checkout, return, custody, stock and administration, on desktop and mobile) that writes through the same database rules.**
 
 > Project 2 of my data portfolio, after the [Sales Dashboard](https://github.com/DiegoSantiago1/analise-vendas-concessionaria). **A real project:** I built the equipment custody system of the supply section where I worked in the Brazilian Air Force, which is still in use, and the stock reports presented at meetings with my superiors. This is the version rebuilt for the portfolio, with fictional data.
