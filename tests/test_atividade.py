@@ -8,6 +8,7 @@ tudo passa pelas funções de regra, e o estado final não pode divergir do hist
 from collections import Counter
 from collections.abc import Iterator
 from datetime import datetime, time
+from decimal import Decimal
 
 import pytest
 
@@ -155,7 +156,9 @@ def test_atividade_deixa_o_que_a_tela_precisa_mostrar(
         "SELECT avg((prazo < retrato)::int) FROM core.vw_posse, ate_o_fim "
         "WHERE retirada_em <= retrato",
     )
-    assert vencidas_no_retrato is not None and 0.10 <= float(vencidas_no_retrato) <= 0.20
+    # avg() de inteiros volta como numeric do PostgreSQL: Decimal no psycopg.
+    assert isinstance(vencidas_no_retrato, Decimal)
+    assert Decimal("0.10") <= vencidas_no_retrato <= Decimal("0.20")
     em_manutencao = valor(
         con,
         "SELECT count(*) FROM core.unidade_patrimonial "
