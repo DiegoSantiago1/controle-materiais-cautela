@@ -64,6 +64,15 @@ jobs:
           -v app_usuario="$ALMOX_APP_USER" -v app_senha="$ALMOX_APP_PASSWORD"
           -f db/bootstrap.sql
 
+      # Os testes do bootstrap rodam o psql DENTRO do container do banco (docker exec), como
+      # no ambiente local. No Actions o banco de serviço também é um container: basta dizer
+      # qual é. O banco da aplicação precisa do schema para os testes de permissão do BI.
+      - name: Container do banco e banco da aplicação
+        run: |
+          echo "ALMOX_DOCKER_CONTAINER=$(docker ps -q --filter ancestor=postgres:16-alpine | head -1)" >> "$GITHUB_ENV"
+          echo "ALMOX_DOCKER_SUPERUSER=postgres" >> "$GITHUB_ENV"
+          python -m almox.migracoes app
+
       - name: Formatação, lint e tipos (Python)
         run: |
           ruff format --check .
