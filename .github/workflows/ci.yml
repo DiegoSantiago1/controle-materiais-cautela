@@ -1,0 +1,90 @@
+# Integração contínua: Python (formatação, lint, tipos, testes de banco, inclusive as cargas
+# completas) e API Node/TS (Biome, tipos, testes) a cada push, contra um PostgreSQL 16 de
+# verdade com o mesmo bootstrap e as mesmas migrações do ambiente local.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      ALMOX_DB_HOST: 127.0.0.1
+      ALMOX_DB_PORT: "5432"
+      ALMOX_DB_NAME: almoxarifado
+      ALMOX_DB_NAME_TESTE: almoxarifado_teste
+      ALMOX_DB_NAME_APP: almoxarifado_app
+      ALMOX_DB_USER: almox
+      ALMOX_DB_PASSWORD: senha_so_do_ci
+      ALMOX_BI_USER: almox_bi
+      ALMOX_BI_PASSWORD: senha_bi_so_do_ci
+      ALMOX_APP_USER: almox_api
+      ALMOX_APP_PASSWORD: senha_app_so_do_ci
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Instalar dependências Python
+        run: pip install -r requirements-dev.txt
+
+      # O mesmo bootstrap.sql do ambiente local (três usuários com o mínimo de privilégios,
+      # três bancos, fuso, REVOKE do PUBLIC), com as variáveis pelo -v do psql.
+      - name: Criar usuários e bancos
+        env:
+          PGPASSWORD: postgres
+        run: >
+          psql -X -h 127.0.0.1 -U postgres -d postgres
+          -v usuario="$ALMOX_DB_USER" -v senha="$ALMOX_DB_PASSWORD"
+          -v banco="$ALMOX_DB_NAME" -v banco_teste="$ALMOX_DB_NAME_TESTE"
+          -v banco_app="$ALMOX_DB_NAME_APP"
+          -v bi_usuario="$ALMOX_BI_USER" -v bi_senha="$ALMOX_BI_PASSWORD"
+          -v app_usuario="$ALMOX_APP_USER" -v app_senha="$ALMOX_APP_PASSWORD"
+          -f db/bootstrap.sql
+
+      - name: Formatação, lint e tipos (Python)
+        run: |
+          ruff format --check .
+          ruff check .
+          mypy
+
+      - name: Testes Python (todos, com as cargas completas)
+        run: pytest
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+
+      # Os testes da API usam o banco de testes no schema atual (README, "Testes da API").
+      - name: Banco de testes no schema atual
+        run: python -m almox.migracoes teste
+
+      - name: API (Biome, tipos e testes)
+        working-directory: api
+        run: |
+          npm ci
+          npm run verificar
